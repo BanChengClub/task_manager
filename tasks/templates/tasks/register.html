@@ -1,0 +1,81 @@
+{% extends 'tasks/base.html' %}
+{% load static %}
+
+{% block title %}注册 - 任务管理工具{% endblock %}
+
+{% block auth_content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body p-5">
+                    <h3 class="text-center mb-4">注册新账号</h3>
+                    
+                    {% if form.errors %}
+                    <div class="alert alert-danger">
+                        {% for field in form %}
+                            {% for error in field.errors %}
+                                <p>{{ error }}</p>
+                            {% endfor %}
+                        {% endfor %}
+                        {% for error in form.non_field_errors %}
+                            <p>{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label for="username" class="form-label">用户名</label>
+                            <input type="text" class="form-control" id="username" name="username" required>
+                            <div class="form-text">必填。150个字符或者更少。包含字母，数字和仅有的@/./+/-/_符号。</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="password1" class="form-label">密码</label>
+                            <input type="password" class="form-control" id="password1" name="password1" required>
+                            <div class="form-text">
+                                <ul>
+                                    <li>你的密码不能与其他个人信息太相似。</li>
+                                    <li>你的密码必须包含至少 8 个字符。</li>
+                                    <li>你的密码不能是大家都爱用的常见密码。</li>
+                                    <li>你的密码不能全部为数字。</li>
+                                </ul>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="password2" class="form-label">密码确认</label>
+                            <input type="password" class="form-control" id="password2" name="password2" required>
+                            <div class="form-text">为了校验，请输入与上面相同的密码。</div>
+                        </div>
+                        
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">注册</button>
+                        </div>
+                    </form>
+                    
+                    <hr>
+                    
+                    <div class="text-center">
+                        <p>已有账号？ <a href="{% url 'login' %}">立即登录</a></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .app-container {
+        display: block;
+    }
+    
+    .main-content {
+        margin-left: 0;
+        padding: 0;
+    }
+</style>
+{% endblock %}

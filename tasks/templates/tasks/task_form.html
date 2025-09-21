@@ -1,0 +1,392 @@
+{% extends 'tasks/base.html' %}
+{% load static %}
+
+{% block title %}{{ title }} - 任务管理工具{% endblock %}
+
+{% block content %}
+<div class="view-content">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3>{{ title }}</h3>
+        <a class="btn btn-outline-secondary" href="{% if task %}{% url 'tasks:task_detail' task.id %}{% else %}{% url 'tasks:task_list' %}{% endif %}">
+            <i class="bi bi-arrow-left"></i> 返回
+        </a>
+    </div>
+    
+    <div class="card">
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+                
+                {% if form.non_field_errors %}
+                <div class="alert alert-danger">
+                    {% for error in form.non_field_errors %}
+                        {{ error }}
+                    {% endfor %}
+                </div>
+                {% endif %}
+                
+                <div class="mb-3">
+                    <label for="{{ form.title.id_for_label }}" class="form-label">任务标题 *</label>
+                    {{ form.title }}
+                    {% if form.title.errors %}
+                    <div class="text-danger">
+                        {% for error in form.title.errors %}
+                            {{ error }}
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <div class="mb-3">
+                    <label for="{{ form.description.id_for_label }}" class="form-label">任务描述</label>
+                    {{ form.description }}
+                    {% if form.description.errors %}
+                    <div class="text-danger">
+                        {% for error in form.description.errors %}
+                            {{ error }}
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="{{ form.project.id_for_label }}" class="form-label">项目 *</label>
+                            {{ form.project }}
+                            {% if form.project.errors %}
+                            <div class="text-danger">
+                                {% for error in form.project.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="{{ form.model.id_for_label }}" class="form-label">机型 *</label>
+                            {{ form.model }}
+                            {% if form.model.errors %}
+                            <div class="text-danger">
+                                {% for error in form.model.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="{{ form.task_type.id_for_label }}" class="form-label">任务类型 *</label>
+                            {{ form.task_type }}
+                            {% if form.task_type.errors %}
+                            <div class="text-danger">
+                                {% for error in form.task_type.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="{{ form.priority.id_for_label }}" class="form-label">优先级 *</label>
+                            {{ form.priority }}
+                            {% if form.priority.errors %}
+                            <div class="text-danger">
+                                {% for error in form.priority.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="{{ form.due_date.id_for_label }}" class="form-label">截止日期</label>
+                            {{ form.due_date }}
+                            {% if form.due_date.errors %}
+                            <div class="text-danger">
+                                {% for error in form.due_date.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="{{ form.status.id_for_label }}" class="form-label">状态 *</label>
+                            {{ form.status }}
+                            {% if form.status.errors %}
+                            <div class="text-danger">
+                                {% for error in form.status.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="{{ form.assigned_to.id_for_label }}" class="form-label">负责人</label>
+                    {{ form.assigned_to }}
+                    {% if form.assigned_to.errors %}
+                    <div class="text-danger">
+                        {% for error in form.assigned_to.errors %}
+                            {{ error }}
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <div class="mb-3" id="sourceTaskField" style="display: none;">
+                    <label for="{{ form.source_task.id_for_label }}" class="form-label">源任务</label>
+                    {{ form.source_task }}
+                    {% if form.source_task.errors %}
+                    <div class="text-danger">
+                        {% for error in form.source_task.errors %}
+                            {{ error }}
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <div class="d-flex justify-content-end">
+                    <button type="submit" class="btn btn-primary">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- 调试信息面板 -->
+<div class="mt-4 p-3 bg-light rounded" id="debug-info" style="display: none;">
+    <h6>调试信息 <small>(按 Ctrl+D 显示/隐藏)</small></h6>
+    <div class="row">
+        <div class="col-md-6">
+            <p>项目选择框ID: <code id="debug-project-id">id_project</code></p>
+            <p>机型选择框ID: <code id="debug-model-id">id_model</code></p>
+            <p>当前项目值: <code id="debug-project-value"></code></p>
+        </div>
+        <div class="col-md-6">
+            <p>API端点: <code id="debug-api-endpoint"></code></p>
+            <p>loadModels函数: <code id="debug-function">undefined</code></p>
+        </div>
+    </div>
+    <div class="mt-2">
+        <button type="button" class="btn btn-sm btn-outline-secondary me-2" onclick="testLoadModels()">
+            测试loadModels函数
+        </button>
+        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="testAPI()">
+            测试API
+        </button>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+// 动态加载机型选项
+function loadModels(projectId) {
+    console.log('Loading models for project:', projectId);
+    const modelSelect = document.getElementById('id_model');
+
+    if (projectId) {
+        // 清空现有选项
+        modelSelect.innerHTML = '';
+
+        // 添加加载中的选项
+        const loadingOption = document.createElement('option');
+        loadingOption.value = '';
+        loadingOption.textContent = '加载中...';
+        modelSelect.appendChild(loadingOption);
+
+        // 发送AJAX请求获取机型
+        fetch(`/api/projects/${projectId}/models/`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('网络响应不正常');
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Received models:', data);
+
+                // 清空选项
+                modelSelect.innerHTML = '';
+
+                // 添加默认选项
+                const defaultOption = document.createElement('option');
+                defaultOption.value = '';
+                defaultOption.textContent = '选择机型';
+                modelSelect.appendChild(defaultOption);
+
+                // 添加机型选项
+                if (data && data.length > 0) {
+                    data.forEach(model => {
+                        const option = document.createElement('option');
+                        option.value = model.id;
+                        option.textContent = model.name;
+                        modelSelect.appendChild(option);
+                    });
+                } else {
+                    const noModelsOption = document.createElement('option');
+                    noModelsOption.value = '';
+                    noModelsOption.textContent = '该项目暂无机型';
+                    modelSelect.appendChild(noModelsOption);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                modelSelect.innerHTML = '';
+
+                const errorOption = document.createElement('option');
+                errorOption.value = '';
+                errorOption.textContent = '加载失败';
+                modelSelect.appendChild(errorOption);
+            });
+    } else {
+        // 清空选项
+        modelSelect.innerHTML = '';
+
+        const defaultOption = document.createElement('option');
+        defaultOption.value = '';
+        defaultOption.textContent = '请先选择项目';
+        modelSelect.appendChild(defaultOption);
+    }
+}
+
+// 页面加载时初始化
+document.addEventListener('DOMContentLoaded', function() {
+    const projectSelect = document.getElementById('id_project');
+    const modelSelect = document.getElementById('id_model');
+
+    console.log('Page loaded, project select:', projectSelect);
+    console.log('Page loaded, model select:', modelSelect);
+
+    // 如果项目已选择，加载对应的机型
+    if (projectSelect && projectSelect.value) {
+        console.log('Initial project selected:', projectSelect.value);
+        loadModels(projectSelect.value);
+    }
+
+    // 监听项目选择变化
+    if (projectSelect) {
+        projectSelect.addEventListener('change', function() {
+            console.log('Project changed:', this.value);
+            loadModels(this.value);
+        });
+    }
+
+    // 根据任务类型显示/隐藏源任务字段
+    const taskTypeSelect = document.getElementById('{{ form.task_type.id_for_label }}');
+    const sourceTaskField = document.getElementById('sourceTaskField');
+
+    function toggleSourceTaskField() {
+        if (taskTypeSelect.value === 'feedback') {
+            sourceTaskField.style.display = 'block';
+        } else {
+            sourceTaskField.style.display = 'none';
+        }
+    }
+
+    // 初始检查
+    toggleSourceTaskField();
+
+    // 监听变化
+    if (taskTypeSelect) {
+        taskTypeSelect.addEventListener('change', toggleSourceTaskField);
+    }
+
+    // 设置默认日期为明天
+    const dueDateInput = document.getElementById('{{ form.due_date.id_for_label }}');
+    if (dueDateInput && !dueDateInput.value) {
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        dueDateInput.value = tomorrow.toISOString().split('T')[0];
+    }
+
+    // 添加调试信息
+    updateDebugInfo();
+});
+
+// 更新调试信息
+function updateDebugInfo() {
+    const projectSelect = document.getElementById('id_project');
+
+    if (projectSelect) {
+        document.getElementById('debug-project-value').textContent = projectSelect.value;
+        document.getElementById('debug-api-endpoint').textContent = `/api/projects/${projectSelect.value}/models/`;
+    }
+
+    // 检查loadModels函数是否已定义
+    if (typeof loadModels === 'function') {
+        document.getElementById('debug-function').textContent = '已定义';
+        document.getElementById('debug-function').className = 'text-success';
+    } else {
+        document.getElementById('debug-function').textContent = '未定义';
+        document.getElementById('debug-function').className = 'text-danger';
+    }
+}
+
+// 测试loadModels函数
+function testLoadModels() {
+    const projectId = document.getElementById('id_project').value;
+    if (!projectId) {
+        alert('请先选择一个项目');
+        return;
+    }
+
+    if (typeof loadModels !== 'function') {
+        alert('loadModels函数未定义');
+        return;
+    }
+
+    console.log('Testing loadModels function with project ID:', projectId);
+    loadModels(projectId);
+}
+
+// 测试API函数
+function testAPI() {
+    const projectId = document.getElementById('id_project').value;
+    if (!projectId) {
+        alert('请先选择一个项目');
+        return;
+    }
+
+    console.log('Testing API for project:', projectId);
+
+    fetch(`/api/projects/${projectId}/models/`)
+        .then(response => {
+            console.log('API response status:', response.status);
+            return response.json();
+        })
+        .then(data => {
+            console.log('API response data:', data);
+            alert(`API测试成功！返回了 ${data.length} 个机型`);
+        })
+        .catch(error => {
+            console.error('API test error:', error);
+            alert('API测试失败，请检查控制台查看详情');
+        });
+}
+
+// 显示/隐藏调试信息（按Ctrl+D切换）
+document.addEventListener('keydown', function(e) {
+    if (e.ctrlKey && e.key === 'd') {
+        e.preventDefault();
+        const debugInfo = document.getElementById('debug-info');
+        debugInfo.style.display = debugInfo.style.display === 'none' ? 'block' : 'none';
+    }
+});
+</script>
+{% endblock %}
+{% endblock %}
