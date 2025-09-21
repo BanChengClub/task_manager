@@ -19,6 +19,8 @@ urlpatterns = [
     path('projects/<int:project_id>/delete/', views.project_delete, name='project_delete'),
     path('models/<int:model_id>/edit/', views.model_edit, name='model_edit'),
     path('models/<int:model_id>/delete/', views.model_delete, name='model_delete'),
-    path('api/projects/<int:project_id>/models/', views.project_models_api, name='project_models_api'),
+    # path('api/projects/<int:project_id>/models/', views.project_models_api, name='project_models_api'),
+    path('api/projects/<int:project_id>/models/', views.get_models_by_project, name='get_models_by_project'),
+    path('task/<int:task_id>/create-related/', views.create_related_task, name='create_related_task'),
     path('debug/', views.debug_info, name='debug_info'),
 ]

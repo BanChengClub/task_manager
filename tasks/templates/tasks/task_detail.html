@@ -94,7 +94,7 @@
             <div class="mb-4">
                 <div class="d-flex justify-content-between align-items-center mb-2">
                     <h6>关联任务</h6>
-                    <button class="btn btn-sm btn-outline-primary">
+                    <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#createRelatedTaskModal">
                         <i class="bi bi-link"></i> 创建关联任务
                     </button>
                 </div>
@@ -169,6 +169,103 @@
     </div>
 </div>
 
+<!-- 创建关联任务模态框 -->
+<div class="modal fade" id="createRelatedTaskModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">创建关联任务</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post" action="{% url 'tasks:task_detail' task.id %}">
+                {% csrf_token %}
+                <input type="hidden" name="create_related_task" value="1">
+
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="id_title" class="form-label">任务标题 *</label>
+                        <input type="text" class="form-control" id="id_title" name="title" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="id_description" class="form-label">任务描述</label>
+                        <textarea class="form-control" id="id_description" name="description" rows="3"></textarea>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="id_project" class="form-label">项目 *</label>
+                                <select class="form-select" id="id_project" name="project" required>
+                                    <option value="">选择项目</option>
+                                    {% for project in projects %}
+                                        <option value="{{ project.id }}" {% if project.id == task.project.id %}selected{% endif %}>
+                                            {{ project.name }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="id_model" class="form-label">机型 *</label>
+                                <select class="form-select" id="id_model" name="model" required>
+                                    <option value="">选择机型</option>
+                                    {% for model in models %}
+                                        <option value="{{ model.id }}" {% if model.id == task.model.id %}selected{% endif %}>
+                                            {{ model.name }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="id_task_type" class="form-label">任务类型 *</label>
+                                <select class="form-select" id="id_task_type" name="task_type" required>
+                                    {% for value, display in task_types %}
+                                        <option value="{{ value }}">{{ display }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="id_priority" class="form-label">优先级 *</label>
+                                <select class="form-select" id="id_priority" name="priority" required>
+                                    {% for value, display in priorities %}
+                                        <option value="{{ value }}">{{ display }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="id_assigned_to" class="form-label">负责人</label>
+                        <select class="form-select" id="id_assigned_to" name="assigned_to">
+                            <option value="">选择负责人</option>
+                            {% for user in users %}
+                                <option value="{{ user.id }}">{{ user.username }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- 隐藏的源任务字段 -->
+                    <input type="hidden" name="source_task" value="{{ task.id }}">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="submit" class="btn btn-primary">创建</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 {% block extra_js %}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
@@ -179,6 +276,63 @@
             commitDate.value = today;
         }
     });
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // 监听项目选择变化
+        const projectSelect = document.getElementById('id_project');
+        const modelSelect = document.getElementById('id_model');
+
+        if (projectSelect && modelSelect) {
+            projectSelect.addEventListener('change', function() {
+                const projectId = this.value;
+                loadModelsForModal(projectId, modelSelect);
+            });
+
+            // 初始加载机型
+            if (projectSelect.value) {
+                loadModelsForModal(projectSelect.value, modelSelect);
+            }
+        }
+    });
+
+    function loadModelsForModal(projectId, modelSelect) {
+        if (projectId) {
+            // 发送AJAX请求获取机型
+            fetch(`/api/projects/${projectId}/models/`)
+                .then(response => response.json())
+                .then(data => {
+                    // 清空选项
+                    modelSelect.innerHTML = '';
+
+                    // 添加默认选项
+                    const defaultOption = document.createElement('option');
+                    defaultOption.value = '';
+                    defaultOption.textContent = '选择机型';
+                    modelSelect.appendChild(defaultOption);
+
+                    // 添加机型选项
+                    if (data && data.length > 0) {
+                        data.forEach(model => {
+                            const option = document.createElement('option');
+                            option.value = model.id;
+                            option.textContent = model.name;
+                            modelSelect.appendChild(option);
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading models:', error);
+                });
+        } else {
+            // 清空选项
+            modelSelect.innerHTML = '';
+
+            const defaultOption = document.createElement('option');
+            defaultOption.value = '';
+            defaultOption.textContent = '请先选择项目';
+            modelSelect.appendChild(defaultOption);
+        }
+    }
 </script>
 {% endblock %}
 {% endblock %}

@@ -51,7 +51,7 @@ class TaskForm(forms.ModelForm):
 
         # 确保所选机型属于所选项目
         if project and model and model.project != project:
-            raise forms.ValidationError("所选机型不属于所选项目")
+            raise forms.ValidationError("所选机型不属于当前项目，请重新选择")
 
         return cleaned_data
 

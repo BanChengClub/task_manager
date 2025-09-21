@@ -291,12 +291,20 @@ document.addEventListener('DOMContentLoaded', function() {
     const sourceTaskField = document.getElementById('sourceTaskField');
 
     function toggleSourceTaskField() {
+        // 确保元素存在再操作
+        if (!taskTypeSelect || !sourceTaskField) return;
+
         if (taskTypeSelect.value === 'feedback') {
             sourceTaskField.style.display = 'block';
         } else {
             sourceTaskField.style.display = 'none';
         }
     }
+
+    // 确保 DOM 加载完成后执行初始化
+    document.addEventListener('DOMContentLoaded', function() {
+        toggleSourceTaskField(); // 移到 DOM 加载完成后执行
+    });
 
     // 初始检查
     toggleSourceTaskField();
@@ -311,7 +319,11 @@ document.addEventListener('DOMContentLoaded', function() {
     if (dueDateInput && !dueDateInput.value) {
         const tomorrow = new Date();
         tomorrow.setDate(tomorrow.getDate() + 1);
-        dueDateInput.value = tomorrow.toISOString().split('T')[0];
+
+        // 处理时区偏移
+        const offset = tomorrow.getTimezoneOffset() * 60000;
+        const localTomorrow = new Date(tomorrow.getTime() - offset);
+        dueDateInput.value = localTomorrow.toISOString().split('T')[0];
     }
 
     // 添加调试信息
