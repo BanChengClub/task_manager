@@ -1,0 +1,59 @@
+{% extends 'tasks/base.html' %}
+{% load static %}
+
+{% block title %}登录 - 任务管理工具{% endblock %}
+
+{% block auth_content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body p-5">
+                    <h3 class="text-center mb-4">任务管理工具</h3>
+                    
+                    {% if form.errors %}
+                    <div class="alert alert-danger">
+                        用户名或密码不正确，请重试。
+                    </div>
+                    {% endif %}
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label for="username" class="form-label">用户名</label>
+                            <input type="text" class="form-control" id="username" name="username" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="password" class="form-label">密码</label>
+                            <input type="password" class="form-control" id="password" name="password" required>
+                        </div>
+                        
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">登录</button>
+                        </div>
+                    </form>
+                    
+                    <hr>
+                    
+                    <div class="text-center">
+                        <p>还没有账号？ <a href="{% url 'register' %}">注册新账号</a></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .app-container {
+        display: block;
+    }
+    
+    .main-content {
+        margin-left: 0;
+        padding: 0;
+    }
+</style>
+{% endblock %}
