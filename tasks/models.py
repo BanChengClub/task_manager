@@ -14,7 +14,7 @@ PRIORITY_CHOICES = [
 
 # BCClub: 
 class Project(models.Model):
-    project_name = models.CharField(max_length=100, verbose_name="项目名称")
+    project_name = models.CharField(max_length=100, unique=True, verbose_name="项目名称")
     project_description = models.TextField(blank=True, verbose_name="项目描述")
     project_priority = models.CharField(max_length=32, choices=PRIORITY_CHOICES, default='medium', verbose_name="项目优先级")
     project_creator = models.ForeignKey(User, on_delete=models.CASCADE, related_name='created_projects', null=True, blank=True, verbose_name="项目创建者")
@@ -105,3 +105,53 @@ class Task(models.Model):
             return timezone.now() > self.task_deadline
         return False
     
+class TaskCommitRecord(models.Model):
+    commit_git_hash = models.CharField(max_length=64, verbose_name="Git提交哈希")
+    commit_message = models.TextField(blank=True, verbose_name="提交信息")
+    commit_url = models.URLField(verbose_name="提交链接")
+    commit_submit_time = models.DateTimeField(verbose_name="提交日期时间")
+    commit_created_time = models.DateTimeField(auto_now_add=True, verbose_name="创建时间")
+    commit_is_merged = models.BooleanField(default=False, verbose_name="是否已合并")
+    commit_merge_request_url = models.URLField(blank=True, verbose_name="合并请求链接")
+    commit_belongsto_task_id = models.ForeignKey(Task, on_delete=models.CASCADE, related_name='commit_records', verbose_name="所属任务")
+
+    class Meta:
+        verbose_name = "提交记录"
+        verbose_name_plural = "提交记录"
+        ordering = ['-commit_created_time', '-commit_submit_time', 'commit_belongsto_task_id', 'commit_git_hash']
+        
+    def __str__(self):
+        return f"Commit {self.commit_git_hash} for Task {self.commit_belongsto_task_id.task_title}"
+    
+class TaskCommentRecord(models.Model):
+    comment_content = models.TextField(verbose_name="评论内容")
+    comment_creator = models.ForeignKey(User, on_delete=models.CASCADE, related_name='created_comments', null=True, blank=True, verbose_name="评论创建者")
+    comment_created_time = models.DateTimeField(auto_now_add=True, verbose_name="评论创建时间")
+    comment_updated_time = models.DateTimeField(auto_now=True, verbose_name="评论更新时间")
+    comment_belongsto_task_id = models.ForeignKey(Task, on_delete=models.CASCADE, related_name='comments', verbose_name="所属任务")
+
+    class Meta:
+        verbose_name = "评论记录"
+        verbose_name_plural = "评论记录"
+        ordering = ['-comment_created_time', 'comment_belongsto_task_id', 'comment_creator']
+        
+    def __str__(self):
+        return f"Comment by {self.comment_creator} on Task {self.comment_belongsto_task_id.task_title}"
+
+class TrickRecord(models.Model):
+    trick_title = models.CharField(max_length=100, verbose_name="技巧标题")
+    trick_content = models.TextField(blank=True, verbose_name="技巧内容")
+    trick_creator = models.ForeignKey(User, on_delete=models.CASCADE, related_name='created_tricks', null=True, blank=True, verbose_name="技巧创建者")
+    trick_created_time = models.DateTimeField(auto_now_add=True, verbose_name="技巧创建时间")
+    trick_updated_time = models.DateTimeField(auto_now=True, verbose_name="技巧更新时间")
+
+    class Meta:
+        verbose_name = "技巧记录"
+        verbose_name_plural = "技巧记录"
+        ordering = ['-trick_created_time', 'trick_title']
+        
+    def __str__(self):
+        return self.trick_title
+    
+    def get_absolute_url(self):
+        return reverse('tasks:trick_detail', kwargs={'trick_id': self.id})
