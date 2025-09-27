@@ -85,6 +85,7 @@ class Task(models.Model):
     task_deadline = models.DateTimeField(null=True, blank=True, verbose_name="任务截止时间")
     task_status = models.CharField(max_length=32, choices=TASK_STATUS_CHOICES, default='pending', verbose_name="任务状态")
     task_type = models.CharField(max_length=32, choices=TASK_TYPE_CHOICES, default='feature', verbose_name="任务类型")
+    task_belongsto_project_id = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='tasks', verbose_name="所属项目")
     task_belongsto_model_id = models.ForeignKey(ProjectModel, on_delete=models.CASCADE, related_name='tasks', verbose_name="所属机型")
     task_source_task_id = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='sub_tasks', verbose_name="源任务ID")
     task_assigned_to_user_id = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='assigned_tasks', verbose_name="负责人")

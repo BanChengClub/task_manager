@@ -1,0 +1,203 @@
+{% extends 'tasks/base.html' %}
+{% load static %}
+{% load custom_filters %}
+
+{% block title %}工作台 - 任务管理工具{% endblock %}
+
+{% block content %}
+<div class="view-content" id="home-view">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="m-0">工作台</h3>
+            <p class="text-muted mb-0" id="welcome-message">
+                欢迎回来，{{ request.user.username }}，今天有<span id="today-task-count">{{ today_tasks.count }}</span>个待处理任务
+            </p>
+        </div>
+        <div class="header-actions">
+            <div class="input-group" style="width: 250px;">
+                <input type="text" class="form-control" placeholder="搜索任务..." id="searchInput">
+                <button class="btn btn-outline-secondary" type="button" id="searchBtn">
+                    <i class="bi bi-search"></i>
+                </button>
+            </div>
+            <a class="btn btn-outline-primary" href="{% url 'tasks:task_list' %}">
+                <i class="bi bi-filter"></i> 筛选
+            </a>
+                <i class="bi bi-plus-circle"></i> 新建任务
+            </a>
+        </div>
+    </div>
+    
+    <!-- 统计卡片 -->
+    <div class="row">
+        <div class="col-md-4">
+            <a href="{% url 'tasks:task_list' %}" class="text-decoration-none">
+                <div class="card stats-card">
+                    <div class="stats-number">{{ total_tasks }}</div>
+                    <div class="stats-label">总任务数</div>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-8">
+            <div class="row">
+                <div class="col-md-3">
+                    <a href="{% url 'tasks:task_list' %}?task_status=pending" class="text-decoration-none">
+                        <div class="card stats-card">
+                            <div class="stats-number">{{ pending_tasks }}</div>
+                            <div class="stats-label">待处理</div>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-md-3">
+                    <a href="{% url 'tasks:task_list' %}?task_status=in_progress" class="text-decoration-none">
+                        <div class="card stats-card">
+                            <div class="stats-number">{{ in_progress_tasks }}</div>
+                            <div class="stats-label">进行中</div>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-md-3">
+                    <a href="{% url 'tasks:task_list' %}?task_status=on_hold" class="text-decoration-none">
+                        <div class="card stats-card">
+                            <div class="stats-number">{{ on_hold_tasks }}</div>
+                            <div class="stats-label">已暂停</div>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-md-3">
+                    <a href="{% url 'tasks:task_list' %}?task_status=completed" class="text-decoration-none">
+                        <div class="card stats-card">
+                            <div class="stats-number">{{ completed_tasks }}</div>
+                            <div class="stats-label">已完成</div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 任务列表 -->
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <span>最近任务</span>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="showCompleted" checked>
+                        <label class="form-check-label" for="showCompleted">显示已完成</label>
+                    </div>
+                </div>
+                <div class="card-body" id="recent-tasks">
+                    {% if recent_tasks %}
+                        {% for task in recent_tasks %}
+                            {% include 'tasks/partials/task_item.html' with task=task %}
+                        {% endfor %}
+                    {% else %}
+                        <div class="empty-state">
+                            <i class="bi bi-inbox"></i>
+                            <h5>暂无任务</h5>
+                            <p>点击"新建任务"按钮开始添加您的第一个任务</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <span>即将到期</span>
+                </div>
+                <div class="card-body" id="due-soon-tasks">
+                    {% if due_soon_tasks %}
+                        {% for task in due_soon_tasks %}
+                            <div class="task-item {{ task.task_type }}" data-url="{% url 'tasks:task_detail' task.id %}">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="mb-0">{{ task.title }}</h6>
+                                        <small class="text-muted">截止: {{ task.due_date }}</small>
+                                    </div>
+                                    <span class="badge {% if task.status == 'pending' %}bg-warning{% elif task.status == 'in-progress' %}bg-primary{% else %}bg-success{% endif %}">
+                                        {{ task.get_status_display }}
+                                    </span>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="empty-state">
+                            <i class="bi bi-calendar-check"></i>
+                            <h5>无即将到期的任务</h5>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <span>项目分布</span>
+                </div>
+                <div class="card-body" id="project-stats">
+                    {% if projects %}
+                        {% for project in projects %}
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <span class="fw-medium">{{ project.name }}</span>
+                                    <small class="text-muted">{{ project.completed_count }}/{{ project.task_count }}</small>
+                                </div>
+                                <div class="progress" style="height: 8px;">
+                                    <div class="progress-bar" role="progressbar" 
+                                         style="width: {% if project.task_count > 0 %}{{ project.completed_count|divide:project.task_count }}{% else %}0{% endif %}%;" 
+                                         aria-valuenow="{% if project.task_count > 0 %}{{ project.completed_count|divide:project.task_count }}{% else %}0{% endif %}" 
+                                         aria-valuemin="0" aria-valuemax="100">
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="empty-state">
+                            <i class="bi bi-pie-chart"></i>
+                            <h5>无项目数据</h5>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // 显示/隐藏已完成任务
+        const showCompleted = document.getElementById('showCompleted');
+        if (showCompleted) {
+            showCompleted.addEventListener('change', function() {
+                const completedTasks = document.querySelectorAll('.task-item.completed');
+                completedTasks.forEach(task => {
+                    task.style.display = this.checked ? 'block' : 'none';
+                });
+            });
+        }
+        
+        // 搜索功能
+        const searchInput = document.getElementById('searchInput');
+        const searchBtn = document.getElementById('searchBtn');
+        
+        if (searchBtn && searchInput) {
+            searchBtn.addEventListener('click', function() {
+                const query = searchInput.value.trim();
+                if (query) {
+                    window.location.href = "{% url 'tasks:task_list' %}?q=" + encodeURIComponent(query);
+                }
+            });
+            
+            searchInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    searchBtn.click();
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}
+{% endblock %}

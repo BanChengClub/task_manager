@@ -1,0 +1,77 @@
+<div class="sidebar">
+    <div class="sidebar-header">
+        <h4 class="m-0 text-white">任务管理工具</h4>
+        <button class="btn btn-sm btn-outline-light" id="toggleSidebar">
+            <i class="bi bi-arrow-left-circle"></i>
+        </button>
+    </div>
+    <div class="sidebar-sticky">
+        <ul class="nav flex-column">
+            <li class="nav-item">
+                <a class="nav-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}" href="{% url 'tasks:home' %}">
+                    <i class="bi bi-house-door"></i>
+                    <span>工作台</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% if request.resolver_match.url_name == 'task_list' %}active{% endif %}" href="{% url 'tasks:task_list' %}">
+                    <i class="bi bi-list-task"></i>
+                    <span>任务列表</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% if request.resolver_match.url_name == 'calendar' %}active{% endif %}" href="{% url 'tasks:calendar' %}">
+                    <i class="bi bi-calendar-event"></i>
+                    <span>日历视图</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% if request.resolver_match.url_name == 'project_list' or request.resolver_match.url_name == 'project_detail' %}active{% endif %}" href="{% url 'tasks:project_list' %}">
+                    <i class="bi bi-diagram-3"></i>
+                    <span>项目与机型</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% if request.resolver_match.url_name == 'tricks' %}active{% endif %}" href="{% url 'tasks:tricks' %}">
+                    <i class="bi bi-lightbulb"></i>
+                    <span>技巧记录</span>
+                </a>
+            </li>
+        </ul>
+
+        <h6 class="sidebar-heading">我的项目</h6>
+        <ul class="nav flex-column">
+            {% for project in projects|slice:":5" %}
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'tasks:project_detail' project.id %}">
+                    <i class="bi bi-folder"></i>
+                    <span>{{ project.name }}</span>
+                </a>
+            </li>
+            {% empty %}
+            <li class="nav-item">
+                <span class="nav-link text-muted">暂无项目</span>
+            </li>
+            {% endfor %}
+            {% if projects.count > 5 %}
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'tasks:project_list' %}">
+                    <i class="bi bi-three-dots"></i>
+                    <span>查看更多...</span>
+                </a>
+            </li>
+            {% endif %}
+        </ul>
+
+        <div class="mt-4 px-3">
+                <i class="bi bi-plus-circle"></i> <span>新建任务</span>
+            </a>
+        </div>
+
+        <div class="mt-3 px-3">
+            <a class="btn btn-outline-light w-100" href="{% url 'logout' %}">
+                <i class="bi bi-box-arrow-right"></i> <span>退出登录</span>
+            </a>
+        </div>
+    </div>
+</div>
