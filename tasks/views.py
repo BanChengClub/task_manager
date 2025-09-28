@@ -153,7 +153,8 @@ def project_edit(request, project_id):
 @login_required
 def project_detail(request, project_id):
     project = get_object_or_404(Project, id=project_id, project_creator=request.user)
-    
+    project_form = ProjectForm(instance=project)  # Ensure project_form is always defined
+
     if request.method == 'POST':
         if 'edit_project' in request.POST:
             form = ProjectForm(request.POST, instance=project)
@@ -161,6 +162,7 @@ def project_detail(request, project_id):
                 form.save()
                 messages.success(request, '项目更新成功')
                 return redirect('tasks:project_detail', project_id=project.id)
+            project_form = form  # In case of invalid form, show errors
         elif 'delete_project' in request.POST:
             project.delete()
             messages.success(request, '项目删除成功')
@@ -171,9 +173,6 @@ def project_detail(request, project_id):
                 ProjectModel.objects.create(model_name=model_name, model_belongsto_project=project)
                 messages.success(request, '机型添加成功')
                 return redirect('tasks:project_detail', project_id=project.id)
-    else:
-        # model_form = ProjectModelForm()
-        project_form = ProjectForm(instance=project)
     
     context = {
         'project': project,
