@@ -391,3 +391,42 @@ body {
 ::-webkit-scrollbar-thumb:hover {
     background: #a8a8a8;
 }
+
+/* 项目列表样式 */
+.project-description {
+    display: -webkit-box;
+    -webkit-line-clamp: 2; /* 最多显示2行 */
+    line-clamp: 2; /* 标准属性 */
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 0.95rem;
+    color: #35383b;
+    margin-bottom: 0.5rem !important;
+    text-indent: 2em;
+    font-size: 0.9rem;
+}
+
+.project-meta {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    color: #6c757d;
+    font-size: 0.875rem;
+}
+
+.meta-item {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.meta-divider {
+    margin: 0 0.5rem;
+    color: #adb5bd;
+}
+
+/* 图标大小调整 */
+.project-meta .bi {
+    font-size: 0.875rem;
+}

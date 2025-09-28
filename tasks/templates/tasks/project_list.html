@@ -22,8 +22,24 @@
                             <h5 class="mb-1">{{ project.project_name }}</h5>
                             <small>{{ project.models.count }} 个机型</small>
                         </div>
-                        <p class="mb-1">{{ project.project_description }}</p>
-                        <small>创建者: {{ project.project_creator.username }} | 创建时间: {{ project.project_created_time|date:"Y-m-d" }} | 更新时间: {{ project.project_updated_time|date:"Y-m-d" }}</small>
+                        <!-- 限制描述最多显示两行 -->
+                        <p class="mb-1 project-description">{{ project.project_description }}</p>
+                        <!-- 优化信息展示样式 -->
+                        <div class="project-meta">
+                            <span class="meta-item">
+                                <i class="bi bi-person"></i> {{ project.project_creator.username }}
+                            </span>
+                            <span class="meta-divider">•</span>
+                            <span class="meta-item">
+                                <i class="bi bi-calendar"></i> {{ project.project_created_time|date:"Y-m-d H:i" }}
+                            </span>
+                            {% if project.project_updated_time %}
+                            <span class="meta-divider">•</span>
+                            <span class="meta-item">
+                                <i class="bi bi-clock"></i> {{ project.project_updated_time|date:"Y-m-d H:i" }}
+                            </span>
+                            {% endif %}
+                        </div>
                     </a>
                     {% endfor %}
                 </div>

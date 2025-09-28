@@ -100,6 +100,91 @@ def home(request):
     return render(request, 'tasks/home.html', context)
 
 @login_required
+def project_list(request):
+    projects = Project.objects.all()
+
+    context = {
+        'projects': projects,
+    }
+
+    return render(request, 'tasks/project_list.html', context)
+
+@login_required
+def project_create(request):
+    if request.method == 'POST':
+        form = ProjectForm(request.POST)
+        if form.is_valid():
+            project = form.save(commit=False)
+            project.project_creator = request.user
+            project.save()
+            messages.success(request, '项目创建成功')
+            return redirect('tasks:project_list')
+    else:
+        form = ProjectForm()
+    
+    context = {
+        'form': form,
+        'title': '创建新项目',
+    }
+    
+    return render(request, 'tasks/project_create.html', context)
+
+@login_required
+def project_edit(request, project_id):
+    project = get_object_or_404(Project, id=project_id, project_creator=request.user)
+    
+    if request.method == 'POST':
+        form = ProjectForm(request.POST, instance=project)
+        if form.is_valid():
+            form.save()
+            messages.success(request, '项目更新成功')
+            return redirect('tasks:project_detail', project_id=project.id)
+    else:
+        form = ProjectForm(instance=project)
+    
+    context = {
+        'form': form,
+        'title': '编辑项目',
+        'project': project,
+    }
+    
+    return render(request, 'tasks/project_create.html', context)
+
+@login_required
+def project_detail(request, project_id):
+    project = get_object_or_404(Project, id=project_id, project_creator=request.user)
+    
+    if request.method == 'POST':
+        if 'edit_project' in request.POST:
+            form = ProjectForm(request.POST, instance=project)
+            if form.is_valid():
+                form.save()
+                messages.success(request, '项目更新成功')
+                return redirect('tasks:project_detail', project_id=project.id)
+        elif 'delete_project' in request.POST:
+            project.delete()
+            messages.success(request, '项目删除成功')
+            return redirect('tasks:project_list')
+        elif 'add_model' in request.POST:
+            model_name = request.POST.get('model_name')
+            if model_name:
+                ProjectModel.objects.create(model_name=model_name, model_belongsto_project=project)
+                messages.success(request, '机型添加成功')
+                return redirect('tasks:project_detail', project_id=project.id)
+    else:
+        # model_form = ProjectModelForm()
+        project_form = ProjectForm(instance=project)
+    
+    context = {
+        'project': project,
+        'project_form': project_form,
+    }
+    return render(request, 'tasks/project_detail.html', context)
+
+
+
+
+@login_required
 def task_list(request):
     tasks = Task.objects.filter(task_assigned_to_user_id=request.user).order_by('-task_created_time')
     # 处理并合并所有筛选条件
@@ -175,26 +260,6 @@ def calendar_view(request):
     }
 
     return render(request, 'tasks/calendar.html', context)
-
-@login_required
-def project_list(request):
-    projects = Project.objects.all()
-
-    if request.method == 'POST':
-        form = ProjectForm(request.POST)
-        if form.is_valid():
-            form.save()
-            messages.success(request, '项目创建成功')
-            return redirect('tasks:project_list')
-    else:
-        form = ProjectForm()
-
-    context = {
-        'projects': projects,
-        'form': form,
-    }
-
-    return render(request, 'tasks/project_list.html', context)
 
 @login_required
 def tricks_view(request):
