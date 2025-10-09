@@ -25,6 +25,13 @@ class ProjectModelForm(forms.ModelForm):
             'model_git_branch': forms.TextInput(attrs={'class': 'form-control'}),
         }
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        
+        # 移除项目字段，因为我们会在视图中设置
+        if 'model_belongsto_project_id' in self.fields:
+            del self.fields['model_belongsto_project_id']
+
 class TaskForm(forms.ModelForm):
     class Meta:
         model = Task
@@ -41,6 +48,40 @@ class TaskForm(forms.ModelForm):
             'task_source_task_id': forms.Select(attrs={'class': 'form-control'}),
             'task_deadline': forms.DateTimeInput(attrs={'type': 'datetime-local', 'class': 'form-control'}),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['task_assigned_to_user_id'].queryset = self.fields['task_assigned_to_user_id'].queryset.order_by('username')
+        self.fields['task_source_task_id'].queryset = self.fields['task_source_task_id'].queryset.order_by('-task_created_time')
+
+        # 如果实例已存在，限制机型选择为所选项目的机型
+        if self.instance and self.instance.pk:
+            self.fields['task_belongsto_model_id'].queryset = ProjectModel.objects.filter(model_belongsto_project_id=self.instance.task_belongsto_project_id)
+            # 设定机型的初始值为当前实例的机型
+            self.fields['task_belongsto_model_id'].initial = self.instance.task_belongsto_model_id
+        else:
+            # 对于新任务，检查是否有项目数据传入
+            if 'task_belongsto_project_id' in self.data:
+                try:
+                    project_id = int(self.data.get('task_belongsto_project_id'))
+                    self.fields['task_belongsto_model_id'].queryset = ProjectModel.objects.filter(model_belongsto_project_id=project_id)
+                except (ValueError, TypeError):
+                    # 如果项目ID无效，设置为空查询集
+                    self.fields['task_belongsto_model_id'].queryset = ProjectModel.objects.none()
+            else:
+                # 如果没有项目数据，设置为空查询集
+                self.fields['task_belongsto_model_id'].queryset = ProjectModel.objects.none()
+
+    def clean(self):
+        cleaned_data = super().clean()
+        project = cleaned_data.get('task_belongsto_project_id')
+        model = cleaned_data.get('task_belongsto_model_id')
+
+        # 确保所选机型属于所选项目
+        if model and project and model.model_belongsto_project_id != project:
+            self.add_error('task_belongsto_model_id', '所选机型不属于所选项目。')
+
+        return cleaned_data
 
 class CommitForm(forms.ModelForm):
     class Meta:
