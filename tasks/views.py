@@ -9,8 +9,8 @@ from django.utils import timezone
 from django.contrib import messages
 from datetime import timedelta, datetime
 
-from .models import Task, Project, ProjectModel, TaskCommitRecord, TaskCommentRecord, TrickRecord
-from .forms import ProjectForm
+from .models import PRIORITY_CHOICES, Task, Project, ProjectModel, TaskCommitRecord, TaskCommentRecord, TrickRecord
+from .forms import ProjectForm, ProjectModelForm, TaskForm, CommentForm, TrickForm, CommitForm
 
 # Create your views here.
 
@@ -131,7 +131,12 @@ def project_create(request):
 
 @login_required
 def project_edit(request, project_id):
-    project = get_object_or_404(Project, id=project_id, project_creator=request.user)
+    # 如果是管理员或创建者，则允许编辑
+    project = get_object_or_404(Project, id=project_id)
+    # 检查当前用户是否为管理员或创建者
+    if not (request.user == project.project_creator or request.user.is_superuser):
+        messages.error(request, '您没有权限编辑该项目。')
+        return redirect('tasks:project_list')
     
     if request.method == 'POST':
         form = ProjectForm(request.POST, instance=project)
@@ -152,7 +157,8 @@ def project_edit(request, project_id):
 
 @login_required
 def project_detail(request, project_id):
-    project = get_object_or_404(Project, id=project_id, project_creator=request.user)
+    # 如果是管理员或创建者，则允许编辑和删除
+    project = get_object_or_404(Project, id=project_id)
     project_form = ProjectForm(instance=project)  # Ensure project_form is always defined
 
     if request.method == 'POST':
@@ -168,20 +174,79 @@ def project_detail(request, project_id):
             messages.success(request, '项目删除成功')
             return redirect('tasks:project_list')
         elif 'add_model' in request.POST:
-            model_name = request.POST.get('model_name')
-            if model_name:
-                ProjectModel.objects.create(model_name=model_name, model_belongsto_project=project)
+            model_form = ProjectModelForm(request.POST)
+            if model_form.is_valid():
+                model = model_form.save(commit=False)
+                model.model_belongsto_project_id = project
+                model.model_creator = request.user
+                model.model_created_time = timezone.now()
+                model.model_updated_time = timezone.now()
+                model.save()
                 messages.success(request, '机型添加成功')
                 return redirect('tasks:project_detail', project_id=project.id)
-    
+            else:
+                messages.error(request, '添加机型失败，请检查表单信息。')
+        else:
+            messages.error(request, '无效的操作。')
+    else:
+        model_form = ProjectModelForm()
+        
     context = {
         'project': project,
         'project_form': project_form,
+        'model_form': model_form,
     }
     return render(request, 'tasks/project_detail.html', context)
 
+@login_required
+def model_edit(request, model_id):
+    model = get_object_or_404(ProjectModel, id=model_id)
+    project = model.model_belongsto_project_id
+    # 检查当前用户是否为管理员或创建者
+    if not (request.user == project.project_creator or request.user.is_superuser):
+        messages.error(request, '您没有权限编辑该机型。')
+        return redirect('tasks:project_detail', project_id=project.id)
+    
+    if request.method == 'POST':
+        form = ProjectModelForm(request.POST, instance=model)
+        if form.is_valid():
+            model = form.save(commit=False)
+            model.model_updated_time = timezone.now()
+            model.save()
+            messages.success(request, '机型更新成功')
+            return redirect('tasks:project_detail', project_id=project.id)
+    else:
+        form = ProjectModelForm(instance=model)
+    
+    context = {
+        'form': form,
+        'title': '编辑机型',
+        'model': model,
+        'project': project,
+    }
+    
+    return render(request, 'tasks/model_edit.html', context)
 
-
+@login_required
+def model_delete(request, model_id):
+    model = get_object_or_404(ProjectModel, id=model_id)
+    project = model.model_belongsto_project_id
+    # 检查当前用户是否为管理员或创建者
+    if not (request.user == project.project_creator or request.user.is_superuser):
+        messages.error(request, '您没有权限删除该机型。')
+        return redirect('tasks:project_detail', project_id=project.id)
+    
+    if request.method == 'POST':
+        model.delete()
+        messages.success(request, '机型删除成功')
+        return redirect('tasks:project_detail', project_id=project.id)
+    
+    context = {
+        'model': model,
+        'project': project,
+    }
+    
+    return render(request, 'tasks/model_confirm_delete.html', context)
 
 @login_required
 def task_list(request):
@@ -207,8 +272,8 @@ def task_list(request):
 
     context = {
         'tasks': tasks,
-        'all_projects': all_projects,
-        'all_models': all_models,
+        'projects': all_projects,
+        'models': all_models,
         'status_filter': status_filter,
         'project_filter': project_filter,
         'model_filter': model_filter,
@@ -216,6 +281,207 @@ def task_list(request):
     }
 
     return render(request, 'tasks/task_list.html', context)
+
+@login_required
+def task_create(request):
+    if request.method == 'POST':
+        form = TaskForm(request.POST)
+        if form.is_valid():
+            task = form.save(commit=False)
+            task.task_creator = request.user
+            task.save()
+            messages.success(request, '任务创建成功')
+            return redirect('tasks:task_list')
+    else:
+        form = TaskForm()
+    
+    context = {
+        'form': form,
+        'title': '创建新任务',
+    }
+    
+    return render(request, 'tasks/task_create.html', context)
+
+@login_required
+def task_edit(request, task_id):
+    task = get_object_or_404(Task, id=task_id)
+    # 检查当前用户是否为任务创建者或负责人，或管理员
+    if not (request.user == task.task_creator or request.user == task.task_assigned_to_user_id or request.user.is_superuser):
+        messages.error(request, '您没有权限编辑该任务。')
+        return redirect('tasks:task_detail', task_id=task.id)
+    
+    if request.method == 'POST':
+        form = TaskForm(request.POST, instance=task)
+        if form.is_valid():
+            form.save()
+            messages.success(request, '任务更新成功')
+            return redirect('tasks:task_detail', task_id=task.id)
+    else:
+        form = TaskForm(instance=task)
+    
+    context = {
+        'form': form,
+        'title': '编辑任务',
+        'task': task,
+    }
+    
+    return render(request, 'tasks/task_create.html', context)
+
+@login_required
+def task_delete(request, task_id):
+    task = get_object_or_404(Task, id=task_id)
+    # 检查当前用户是否为任务创建者或负责人，或管理员
+    if not (request.user == task.task_creator or request.user == task.task_assigned_to_user_id or request.user.is_superuser):
+        messages.error(request, '您没有权限删除该任务。')
+        return redirect('tasks:task_detail', task_id=task.id)
+    
+    if request.method == 'POST':
+        task.delete()
+        messages.success(request, '任务删除成功')
+        return redirect('tasks:task_list')
+    
+    context = {
+        'task': task,
+    }
+    
+    return render(request, 'tasks/task_confirm_delete.html', context)
+
+@login_required
+def task_detail(request, task_id):
+    task = get_object_or_404(Task, id=task_id)
+    commit_records = TaskCommitRecord.objects.filter(commit_belongsto_task_id=task).order_by('-commit_created_time')
+    comment_records = TaskCommentRecord.objects.filter(comment_belongsto_task_id=task).order_by('comment_created_time')
+
+    if request.method == 'POST':
+        if 'add_comment' in request.POST:
+            content_form = CommentForm(request.POST)
+            if content_form.is_valid():
+                comment = content_form.save(commit=False)                
+                comment.comment_belongsto_task_id = task
+                comment.comment_creator = request.user
+                comment.comment_created_time = timezone.now()
+                comment.comment_updated_time = timezone.now()
+                comment.save()
+                messages.success(request, '评论添加成功')
+                return redirect('tasks:task_detail', task_id=task.id)
+            else:
+                messages.error(request, '评论内容不能为空。')
+        elif 'add_commit' in request.POST:
+            print("Received POST data for commit:", request.POST)  # Debugging line
+            commit_form = CommitForm(request.POST)
+            if commit_form.is_valid():
+                commit = commit_form.save(commit=False)                
+                commit.commit_belongsto_task_id = task
+                commit.commit_created_time = timezone.now()
+                commit.save()
+                messages.success(request, '提交记录添加成功')
+                return redirect('tasks:task_detail', task_id=task.id)
+            else:
+                messages.error(request, '提交记录信息有误，请检查表单。')
+        elif 'update_status' in request.POST:
+            new_status = request.POST.get('task_status')
+            if new_status in dict(Task.STATUS_CHOICES).keys():
+                task.task_status = new_status
+                task.save()
+                messages.success(request, '任务状态更新成功')
+                return redirect('tasks:task_detail', task_id=task.id)
+            else:
+                messages.error(request, '无效的任务状态。')
+        elif 'create_related_task' in request.POST:
+            # 处理 创建关联任务的请求
+            form_data = request.POST.copy()
+            task_form = TaskForm(form_data)
+            if task_form.is_valid():
+                related_task = task_form.save(commit=False)
+                related_task.task_creator = request.user
+                related_task.task_source_task_id = task
+                related_task.save()
+                messages.success(request, '关联任务创建成功')
+                return redirect('tasks:task_detail', task_id=task.id)
+            else:
+                messages.error(request, '关联任务信息有误，请检查表单。')
+                for field, errors in task_form.errors.items():
+                    for error in errors:
+                        messages.error(request, f"字段 {field}: {error}")
+        else:
+            messages.error(request, '无效的操作。')
+    else:
+        content_form = CommentForm()
+        commit_form = CommitForm()
+
+    projects = Project.objects.all()
+    models = ProjectModel.objects.filter(model_belongsto_project_id=task.task_belongsto_project_id)
+    users = User.objects.all()
+
+    task_types = Task.TASK_TYPE_CHOICES
+    task_priorities = PRIORITY_CHOICES
+    task_statuses = Task.TASK_STATUS_CHOICES
+
+    context = {
+        'task': task,
+        'commit_form': commit_records,
+        'comment_form': comment_records,
+        'projects': projects,
+        'models': models,
+        'users': users,
+        'task_types': task_types,
+        'priorities': task_priorities,
+        'statuses': task_statuses,
+    }
+
+    return render(request, 'tasks/task_detail.html', context)
+
+@login_required
+def create_related_task(request, task_id):
+    source_task = get_object_or_404(Task, id=task_id)
+
+    if request.method == 'POST':
+        form = TaskForm(request.POST)
+        if form.is_valid():
+            related_task = form.save(commit=False)
+            related_task.task_creator = request.user
+            related_task.task_source_task_id = source_task
+            related_task.save()
+            messages.success(request, '关联任务创建成功')
+            return redirect('tasks:task_detail', task_id=source_task.id)
+        else:
+            messages.error(request, '关联任务信息有误，请检查表单。')
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, f"字段 {field}: {error}")
+    elif request.method == 'GET':
+        initial_data = {
+            'task_belongsto_project_id': source_task.task_belongsto_project_id,
+            'task_belongsto_model_id': source_task.task_belongsto_model_id,
+            'task_assigned_to_user_id': source_task.task_assigned_to_user_id,
+            'task_type': source_task.task_type,
+            'task_priority': source_task.task_priority,
+        }
+        form = TaskForm(initial=initial_data)
+    else:
+        form = TaskForm()
+
+    projects = Project.objects.all()
+    models = ProjectModel.objects.filter(model_belongsto_project_id=source_task.task_belongsto_project_id)
+    users = User.objects.all()
+    
+    task_types = Task.TASK_TYPE_CHOICES
+    task_priorities = PRIORITY_CHOICES
+    task_statuses = Task.TASK_STATUS_CHOICES
+
+    context = {
+        'form': form,
+        'title': '创建关联任务',
+        'task': source_task,
+        'projects': projects,
+        'models': models,
+        'users': users,
+        'task_types': task_types,
+        'task_priorities': task_priorities,
+        'task_statuses': task_statuses,
+    }
+
+    return render(request, 'tasks/task_create.html', context)
 
 @login_required
 def calendar_view(request):
@@ -269,3 +535,14 @@ def tricks_view(request):
     }
 
     return render(request, 'tasks/tricks.html', context)
+
+
+@login_required
+def project_models(request, project_id):
+    
+    try:
+        models = ProjectModel.objects.filter(model_belongsto_project_id=project_id).order_by('-model_priority', '-model_created_time')
+        data = [{'id': model.id, 'name': model.model_name} for model in models]
+        return JsonResponse(data, safe=False)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)

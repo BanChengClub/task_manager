@@ -41,11 +41,11 @@
 
         <h6 class="sidebar-heading">我的项目</h6>
         <ul class="nav flex-column">
-            {% for project in projects|slice:":5" %}
+            {% for project in projects|slice:":3" %}
             <li class="nav-item">
                 <a class="nav-link" href="{% url 'tasks:project_detail' project.id %}">
                     <i class="bi bi-folder"></i>
-                    <span>{{ project.name }}</span>
+                    <span>{{ project.project_name }}</span>
                 </a>
             </li>
             {% empty %}
@@ -53,7 +53,7 @@
                 <span class="nav-link text-muted">暂无项目</span>
             </li>
             {% endfor %}
-            {% if projects.count > 5 %}
+            {% if projects.count > 3 %}
             <li class="nav-item">
                 <a class="nav-link" href="{% url 'tasks:project_list' %}">
                     <i class="bi bi-three-dots"></i>
@@ -64,6 +64,7 @@
         </ul>
 
         <div class="mt-4 px-3">
+            <a class="btn btn-warning w-100" href="{% url 'tasks:task_create' %}">
                 <i class="bi bi-plus-circle"></i> <span>新建任务</span>
             </a>
         </div>

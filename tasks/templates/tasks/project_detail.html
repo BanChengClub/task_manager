@@ -66,12 +66,12 @@
                             {% for task in project.tasks.all|slice:":5" %}
                             <a href="{% url 'tasks:task_detail' task.id %}" class="list-group-item list-group-item-action">
                                 <div class="d-flex w-100 justify-content-between">
-                                    <h6 class="mb-1">{{ task.title }}</h6>
-                                    <span class="badge {% if task.status == 'pending' %}bg-warning{% elif task.status == 'in-progress' %}bg-primary{% else %}bg-success{% endif %}">
-                                        {{ task.get_status_display }}
+                                    <h6 class="mb-1">{{ task.task_title }}</h6>
+                                    <span class="badge {% if task.task_status == 'pending' %}bg-warning{% elif task.task_status == 'in-progress' %}bg-primary{% else %}bg-success{% endif %}">
+                                        {{ task.get_task_status_display }}
                                     </span>
                                 </div>
-                                <small class="text-muted">机型: {{ task.model.name }} | 截止日期: {{ task.due_date|default:"未设置" }}</small>
+                                <small class="text-muted">机型: {{ task.task_belongsto_model_id.name }} | 截止日期: {{ task.task_deadline|default:"未设置" }}</small>
                             </a>
                             {% endfor %}
                         </div>
@@ -105,7 +105,7 @@
                             {% for model in project.models.all %}
                             <div class="list-group-item">
                                 <div class="d-flex w-100 justify-content-between">
-                                    <h6 class="mb-1">{{ model.name }}</h6>
+                                    <h6 class="mb-1">{{ model.model_name }}</h6>
                                     <div class="btn-group">
                                         <a href="{% url 'tasks:model_edit' model.id %}" class="btn btn-sm btn-outline-secondary">
                                             <i class="bi bi-pencil"></i>
@@ -115,10 +115,11 @@
                                         </a>
                                     </div>
                                 </div>
-                                {% if model.description %}
-                                <p class="mb-1 text-muted">{{ model.description }}</p>
+                                {% if model.model_description %}
+                                <p class="mb-1 text-muted">{{ model.model_description }}</p>
                                 {% endif %}
-                                <small>创建时间: {{ model.created_at|date:"Y-m-d" }}</small>
+                                <small>创建时间: {{ model.model_created_time|date:"Y-m-d" }}</small>
+                                <small>更新时间: {{ model.model_updated_time|date:"Y-m-d" }}</small>
                             </div>
                             {% endfor %}
                         </div>
@@ -150,22 +151,55 @@
                     <form method="post" action="{% url 'tasks:project_detail' project.id %}">
                         {% csrf_token %}
                         <div class="mb-3">
-                            <label for="{{ model_form.name.id_for_label }}" class="form-label">机型名称 *</label>
-                            {{ model_form.name }}
-                            {% if model_form.name.errors %}
+                            <label for="{{ model_form.model_name.id_for_label }}" class="form-label">机型名称 *</label>
+                            {{ model_form.model_name }}
+                            {% if model_form.model_name.errors %}
                             <div class="text-danger">
-                                {% for error in model_form.name.errors %}
+                                {% for error in model_form.model_name.errors %}
                                     {{ error }}
                                 {% endfor %}
                             </div>
                             {% endif %}
                         </div>
                         <div class="mb-3">
-                            <label for="{{ model_form.description.id_for_label }}" class="form-label">机型描述</label>
-                            {{ model_form.description }}
-                            {% if model_form.description.errors %}
+                            <label for="{{ model_form.model_description.id_for_label }}" class="form-label">机型描述</label>
+                            {{ model_form.model_description }}
+                            {% if model_form.model_description.errors %}
                             <div class="text-danger">
-                                {% for error in model_form.description.errors %}
+                                {% for error in model_form.model_description.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="mb-3">
+                            <label for="{{ model_form.model_priority.id_for_label }}" class="form-label">机型优先级</label>
+                            {{ model_form.model_priority }}
+                            {% if model_form.model_priority.errors %}
+                            <div class="text-danger">
+                                {% for error in model_form.model_priority.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="mb-3">
+                            <label for="{{ model_form.model_git_repository.id_for_label }}" class="form-label">代码库地址</label>
+                            {{ model_form.model_git_repository }}
+                            {% if model_form.model_git_repository.errors %}
+                            <div class="text-danger">
+                                {% for error in model_form.model_git_repository.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="mb-3">
+                            <label for="{{ model_form.model_git_branch.id_for_label }}" class="form-label">分支名称</label>
+                            {{ model_form.model_git_branch }}
+                            {% if model_form.model_git_branch.errors %}
+                            <div class="text-danger">
+                                {% for error in model_form.model_git_branch.errors %}
                                     {{ error }}
                                 {% endfor %}
                             </div>

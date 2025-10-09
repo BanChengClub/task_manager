@@ -1,0 +1,100 @@
+{% extends 'tasks/base.html' %}
+{% load static %}
+
+{% block title %}{{ title }} - 任务管理工具{% endblock %}
+
+{% block content %}
+<div class="view-content">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3>{{ title }}</h3>
+        <a class="btn btn-outline-secondary" href="{% url 'tasks:project_detail' model.model_belongsto_project_id.id %}">
+            <i class="bi bi-arrow-left"></i> 返回项目
+        </a>
+    </div>
+    
+    <div class="card">
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+                
+                {% if form.non_field_errors %}
+                <div class="alert alert-danger">
+                    {% for error in form.non_field_errors %}
+                        {{ error }}
+                    {% endfor %}
+                </div>
+                {% endif %}
+                
+                <div class="mb-3">
+                    <label for="{{ form.model_name.id_for_label }}" class="form-label">机型名称 *</label>
+                    {{ form.model_name }}
+                    {% if form.model_name.errors %}
+                    <div class="text-danger">
+                        {% for error in form.model_name.errors %}
+                            {{ error }}
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <div class="mb-3">
+                    <label for="{{ form.model_description.id_for_label }}" class="form-label">机型描述</label>
+                    {{ form.model_description }}
+                    {% if form.model_description.errors %}
+                    <div class="text-danger">
+                        {% for error in form.model_description.errors %}
+                            {{ error }}
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="mb-3">
+                    <label for="{{ form.model_priority.id_for_label }}" class="form-label">机型优先级</label>
+                    {{ form.model_priority }}
+                    {% if form.model_priority.errors %}
+                    <div class="text-danger">
+                        {% for error in form.model_priority.errors %}
+                            {{ error }}
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <div class="mb-3">
+                    <label for="{{ form.model_git_repository.id_for_label }}" class="form-label">代码库地址</label>
+                    {{ form.model_git_repository }}
+                    {% if form.model_git_repository.errors %}
+                    <div class="text-danger">
+                        {% for error in form.model_git_repository.errors %}
+                            {{ error }}
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="mb-3">
+                    <label for="{{ form.model_git_branch.id_for_label }}" class="form-label">分支名称</label>
+                    {{ form.model_git_branch }}
+                    {% if form.model_git_branch.errors %}
+                    <div class="text-danger">
+                        {% for error in form.model_git_branch.errors %}
+                            {{ error }}
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">所属项目</label>
+                    <input type="text" class="form-control" value="{{ model.model_belongsto_project_id.project_name }}" disabled>
+                </div>
+                
+                <div class="d-flex justify-content-end">
+                    <button type="submit" class="btn btn-primary">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
