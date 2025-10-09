@@ -1,0 +1,47 @@
+{% if messages %}
+<div class="toast-container">
+    {% for message in messages %}
+    <div class="toast alert alert-{{ message.tags }} shadow-lg rounded-lg overflow-hidden fade-in-up" role="alert">
+        <div class="d-flex align-items-center p-3">
+            {% if message.tags == 'success' %}
+                <i class="bi bi-check-circle-fill text-success fs-4 me-3"></i>
+            {% elif message.tags == 'error' %}
+                <i class="bi bi-exclamation-circle-fill text-danger fs-4 me-3"></i>
+            {% elif message.tags == 'warning' %}
+                <i class="bi bi-exclamation-triangle-fill text-warning fs-4 me-3"></i>
+            {% else %}
+                <i class="bi bi-info-circle-fill text-primary fs-4 me-3"></i>
+            {% endif %}
+            <div class="flex-grow-1">
+                {{ message }}
+            </div>
+            <button type="button" class="btn-close ms-3" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const toasts = document.querySelectorAll('.toast');
+    
+    toasts.forEach(toast => {
+        // 显示消息
+        toast.style.display = 'block';
+        
+        // 点击关闭按钮
+        const closeBtn = toast.querySelector('.btn-close');
+        closeBtn.addEventListener('click', () => {
+            toast.classList.add('fade-out');
+            setTimeout(() => toast.remove(), 500);
+        });
+        
+        // 5秒后自动隐藏
+        setTimeout(() => {
+            toast.classList.add('fade-out');
+            setTimeout(() => toast.remove(), 500);
+        }, 3000);
+    });
+});
+</script>
+{% endif %}

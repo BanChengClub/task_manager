@@ -430,3 +430,99 @@ body {
 .project-meta .bi {
     font-size: 0.875rem;
 }
+
+/* 消息容器定位在中上方 */
+.toast-container {
+    position: fixed;
+    top: 5%;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 50;
+    width: 90%;
+    max-width: 400px;
+}
+
+/* 消息提示样式 */
+.toast {
+    display: none;
+    margin-bottom: 0.5rem;
+    border: none;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.1), 0 2px 3px -1px rgba(0, 0, 0, 0.06);
+    min-height: auto;
+}
+
+.toast i {
+    font-size: 1rem;
+    margin-right: 0.75rem;
+}
+
+.toast .btn-close {
+    padding: 0.25rem;
+    margin-left: 0.25rem;
+}
+
+/* 不同类型消息的细微调整 */
+.toast.alert-success {
+    background-color: #f0fdf4;
+    border-left: 4px solid #10b981;
+}
+
+.toast.alert-error {
+    background-color: #fef2f2;
+    border-left: 4px solid #ef4444;
+}
+
+.toast.alert-warning {
+    background-color: #fffbeb;
+    border-left: 4px solid #f59e0b;
+}
+
+.toast.alert-info {
+    background-color: #eff6ff;
+    border-left: 4px solid #3b82f6;
+}
+
+/* 动画效果 */
+.fade-in-up {
+    animation: fadeInUp 0.5s ease-out forwards;
+}
+
+/* 消息内部布局 */
+.toast .d-flex {
+    align-items: center;
+    padding: 0.5rem, 0.5rem;
+    min-height: auto;
+}
+
+.toast .flex-grow-1 {
+    padding-right: 0.25rem;
+    line-height: 1.2;
+}
+
+@keyframes fadeInUp {
+    from { 
+        opacity: 0; 
+        transform: translateY(-20px);
+    }
+    to { 
+        opacity: 1; 
+        transform: translateY(0);
+    }
+}
+
+/* 淡出动画 */
+.fade-out {
+    animation: fadeOut 0.5s ease-in forwards;
+}
+
+@keyframes fadeOut {
+    from { 
+        opacity: 1; 
+        transform: translateY(0);
+    }
+    to { 
+        opacity: 0; 
+        transform: translateY(-20px);
+    }
+}
