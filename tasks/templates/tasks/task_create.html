@@ -168,36 +168,12 @@
     </div>
 </div>
 
-<!-- 调试信息面板 -->
-<div class="mt-4 p-3 bg-light rounded" id="debug-info" style="display: none;">
-    <h6>调试信息 <small>(按 Ctrl+D 显示/隐藏)</small></h6>
-    <div class="row">
-        <div class="col-md-6">
-            <p>项目选择框ID: <code id="debug-project-id">id_project</code></p>
-            <p>机型选择框ID: <code id="debug-model-id">id_model</code></p>
-            <p>当前项目值: <code id="debug-project-value"></code></p>
-        </div>
-        <div class="col-md-6">
-            <p>API端点: <code id="debug-api-endpoint"></code></p>
-            <p>loadModels函数: <code id="debug-function">undefined</code></p>
-        </div>
-    </div>
-    <div class="mt-2">
-        <button type="button" class="btn btn-sm btn-outline-secondary me-2" onclick="testLoadModels()">
-            测试loadModels函数
-        </button>
-        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="testAPI()">
-            测试API
-        </button>
-    </div>
-</div>
-
 {% block extra_js %}
 <script>
 // 动态加载机型选项
 function loadModels(projectId) {
     console.log('Loading models for project:', projectId);
-    const modelSelect = document.getElementById('id_model');
+    const modelSelect = document.getElementById('id_task_belongsto_model_id');
 
     if (projectId) {
         // 清空现有选项
@@ -266,8 +242,8 @@ function loadModels(projectId) {
 
 // 页面加载时初始化
 document.addEventListener('DOMContentLoaded', function() {
-    const projectSelect = document.getElementById('id_project');
-    const modelSelect = document.getElementById('id_model');
+    const projectSelect = document.getElementById('id_task_belongsto_project_id');
+    const modelSelect = document.getElementById('id_task_belongsto_model_id');
 
     console.log('Page loaded, project select:', projectSelect);
     console.log('Page loaded, model select:', modelSelect);
@@ -315,7 +291,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // 设置默认日期为明天
-    const dueDateInput = document.getElementById('{{ form.due_date.id_for_label }}');
+    const dueDateInput = document.getElementById('{{ form.task_deadline.id_for_label }}');
     if (dueDateInput && !dueDateInput.value) {
         const tomorrow = new Date();
         tomorrow.setDate(tomorrow.getDate() + 1);
@@ -325,80 +301,8 @@ document.addEventListener('DOMContentLoaded', function() {
         const localTomorrow = new Date(tomorrow.getTime() - offset);
         dueDateInput.value = localTomorrow.toISOString().split('T')[0];
     }
-
-    // 添加调试信息
-    updateDebugInfo();
 });
 
-// 更新调试信息
-function updateDebugInfo() {
-    const projectSelect = document.getElementById('id_project');
-
-    if (projectSelect) {
-        document.getElementById('debug-project-value').textContent = projectSelect.value;
-        document.getElementById('debug-api-endpoint').textContent = `/project/${projectSelect.value}/models/`;
-    }
-
-    // 检查loadModels函数是否已定义
-    if (typeof loadModels === 'function') {
-        document.getElementById('debug-function').textContent = '已定义';
-        document.getElementById('debug-function').className = 'text-success';
-    } else {
-        document.getElementById('debug-function').textContent = '未定义';
-        document.getElementById('debug-function').className = 'text-danger';
-    }
-}
-
-// 测试loadModels函数
-function testLoadModels() {
-    const projectId = document.getElementById('id_project').value;
-    if (!projectId) {
-        alert('请先选择一个项目');
-        return;
-    }
-
-    if (typeof loadModels !== 'function') {
-        alert('loadModels函数未定义');
-        return;
-    }
-
-    console.log('Testing loadModels function with project ID:', projectId);
-    loadModels(projectId);
-}
-
-// 测试API函数
-function testAPI() {
-    const projectId = document.getElementById('id_project').value;
-    if (!projectId) {
-        alert('请先选择一个项目');
-        return;
-    }
-
-    console.log('Testing API for project:', projectId);
-
-    fetch(`/project/${projectId}/models/`)
-        .then(response => {
-            console.log('API response status:', response.status);
-            return response.json();
-        })
-        .then(data => {
-            console.log('API response data:', data);
-            alert(`API测试成功！返回了 ${data.length} 个机型`);
-        })
-        .catch(error => {
-            console.error('API test error:', error);
-            alert('API测试失败，请检查控制台查看详情');
-        });
-}
-
-// 显示/隐藏调试信息（按Ctrl+D切换）
-document.addEventListener('keydown', function(e) {
-    if (e.ctrlKey && e.key === 'd') {
-        e.preventDefault();
-        const debugInfo = document.getElementById('debug-info');
-        debugInfo.style.display = debugInfo.style.display === 'none' ? 'block' : 'none';
-    }
-});
 </script>
 {% endblock %}
 {% endblock %}
