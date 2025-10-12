@@ -289,6 +289,8 @@ def task_create(request):
         if form.is_valid():
             task = form.save(commit=False)
             task.task_creator = request.user
+            if not task.task_assigned_to_user_id:
+                task.task_assigned_to_user_id = request.user  # 如果未指定负责人，则默认分配给创建者
             task.save()
             messages.success(request, '任务创建成功')
             return redirect('tasks:task_list')

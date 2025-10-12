@@ -10,8 +10,10 @@
                     {% else %}bg-success{% endif %} me-2 mb-1">
                     {{ task.get_task_status_display }}
                 </span>
-                <span class="badge badge-project me-2 mb-1">{{ task.task_belongsto_project_id.project_name }}</span>
-                <span class="badge badge-model me-2 mb-1">{{ task.task_belongsto_model_id.model_name }}</span>
+                <span class="badge badge-project me-2 mb-1">项目: {{ task.task_belongsto_project_id.project_name }}</span>
+                <span class="badge badge-model me-2 mb-1">机型: {{ task.task_belongsto_model_id.model_name }}</span>
+                <span class="badge badge-creator me-2 mb-1">创建者: {{ task.task_creator }}</span>
+                <span class="badge badge-assigned-user me-2 mb-1">指派给: {{ task.task_assigned_to_user_id }}</span>
                 {% if task.task_deadline %}
                     <span class="text-muted mb-1">截止: {{ task.task_deadline }}</span>
                 {% endif %}

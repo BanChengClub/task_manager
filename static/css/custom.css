@@ -181,6 +181,22 @@ body {
     border-radius: 6px;
 }
 
+.badge-creator {
+    background-color: #d1e7dd;
+    color: #0f5132;
+    font-weight: 500;
+    padding: 0.35em 0.65em;
+    border-radius: 6px;
+}
+
+.badge-assigned-user {
+    background-color: #cff4fc;
+    color: #055160;
+    font-weight: 500;
+    padding: 0.35em 0.65em;
+    border-radius: 6px;
+}
+
 /* 表单样式 */
 .form-control, .form-select {
     border-radius: 8px;
