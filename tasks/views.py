@@ -483,6 +483,61 @@ def task_detail(request, task_id):
     return render(request, 'tasks/task_detail.html', context)
 
 @login_required
+def commit_edit(request, task_id, commit_id):
+    """编辑提交记录"""
+    task = get_object_or_404(Task, id=task_id)
+    commit = get_object_or_404(TaskCommitRecord, id=commit_id, commit_belongsto_task_id=task)
+    
+    # 检查权限：只有提交记录相关的任务负责人或管理员可以编辑
+    if not (request.user == task.task_assigned_to_user_id or request.user.is_superuser):
+        messages.error(request, '您没有权限编辑该提交记录。')
+        return redirect('tasks:task_detail', task_id=task.id)
+    
+    if request.method == 'POST':
+        form = CommitForm(request.POST, instance=commit)
+        if form.is_valid():
+            form.save()
+            messages.success(request, '提交记录更新成功')
+            return redirect('tasks:task_detail', task_id=task.id)
+    else:
+        form = CommitForm(instance=commit)
+        # 格式化日期时间用于表单显示
+        if commit.commit_submit_time:
+            form.initial['commit_submit_time'] = commit.commit_submit_time.strftime('%Y-%m-%dT%H:%M')
+    
+    context = {
+        'form': form,
+        'task': task,
+        'commit': commit,
+        'title': '编辑提交记录',
+    }
+    
+    return render(request, 'tasks/commit_edit.html', context)
+
+@login_required
+def commit_delete(request, task_id, commit_id):
+    """删除提交记录"""
+    task = get_object_or_404(Task, id=task_id)
+    commit = get_object_or_404(TaskCommitRecord, id=commit_id, commit_belongsto_task_id=task)
+    
+    # 检查权限
+    if not (request.user == task.task_assigned_to_user_id or request.user.is_superuser):
+        messages.error(request, '您没有权限删除该提交记录。')
+        return redirect('tasks:task_detail', task_id=task.id)
+    
+    if request.method == 'POST':
+        commit.delete()
+        messages.success(request, '提交记录删除成功')
+        return redirect('tasks:task_detail', task_id=task.id)
+    
+    context = {
+        'task': task,
+        'commit': commit,
+    }
+    
+    return render(request, 'tasks/commit_confirm_delete.html', context)
+
+@login_required
 def create_related_task(request, task_id):
     source_task = get_object_or_404(Task, id=task_id)
 

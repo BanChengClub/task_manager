@@ -68,49 +68,109 @@
             </div>
             
             <div class="mb-4">
-                <div class="d-flex justify-content-between align-items-center mb-2">
-                    <h6>代码提交记录</h6>
-                    <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#addCommitModal">
-                        <i class="bi bi-plus"></i> 添加提交记录
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div class="d-flex align-items-center">
+                        <h6 class="mb-0 me-3">
+                            <i class="bi bi-git me-2"></i>代码提交记录
+                            <span class="badge bg-secondary ms-2">{{ commit_form|length }}</span>
+                        </h6>
+                        {% if commit_form %}
+                        <button class="btn btn-sm btn-outline-secondary" id="toggleAllCommits">
+                            <i class="bi bi-chevron-double-up"></i>
+                        </button>
+                        {% endif %}
+                    </div>
+                    <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#addCommitModal">
+                        <i class="bi bi-plus-circle"></i> 添加提交记录
                     </button>
                 </div>
+                
                 <div id="commit-records">
                     {% if commit_form %}
-                        {% for commit in commit_form %}
-                            <div class="card mb-2">
-                                <div class="card-body py-2">
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <div>
-                                            <span >SHA:</span>
-                                            <strong class="text-monospace">{{ commit.commit_git_hash }}</strong>
+                        <div class="commit-list">
+                            {% for commit in commit_form %}
+                                <div class="card commit-card mb-3 border-{% if commit.commit_is_merged %}success{% else %}warning{% endif %}">
+                                    <div class="card-header py-2 d-flex justify-content-between align-items-center">
+                                        <div class="d-flex align-items-center">
+                                            <i class="bi bi-git me-2"></i>
+                                            <code class="me-2">{{ commit.commit_git_hash}}</code>
                                             {% if commit.commit_is_merged %}
-                                                <span class="badge bg-success ms-2">已合并</span>
+                                                <span class="badge bg-success">
+                                                    <i class="bi bi-check-circle"></i> 已合并
+                                                </span>
                                             {% else %}
-                                                <span class="badge bg-warning ms-2">未合并</span>
+                                                <span class="badge bg-warning text-dark">
+                                                    <i class="bi bi-clock"></i> 未合并
+                                                </span>
                                             {% endif %}
+                                            <small class="text-muted ms-2">
+                                                {{ commit.commit_submit_time|date:"m-d H:i" }}
+                                            </small>
                                         </div>
-                                        <small class="text-muted">{{ commit.commit_submit_time|date:"Y-m-d H:i" }}</small>
+                                        <div class="d-flex align-items-center">
+                                            <div class="commit-actions me-2">
+                                                <a href="{{ commit.commit_url }}" target="_blank" 
+                                                    class="btn btn-sm btn-outline-primary me-1" 
+                                                    title="查看提交">
+                                                    <i class="bi bi-link-45deg">提交</i>
+                                                </a>
+                                                {% if commit.commit_merge_request_url %}
+                                                    <a href="{{ commit.commit_merge_request_url }}" target="_blank" 
+                                                        class="btn btn-sm btn-outline-info" 
+                                                        title="查看合并请求">
+                                                        <i class="bi bi-git">合并请求</i>
+                                                    </a>
+                                                {% endif %}
+                                            </div>
+                                            <div class="dropdown">
+                                                <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" 
+                                                        data-bs-toggle="dropdown" aria-expanded="false">
+                                                    <i class="bi bi-three-dots"></i>
+                                                </button>
+                                                <ul class="dropdown-menu dropdown-menu-end">
+                                                    <li>
+                                                        <a class="dropdown-item" href="{% url 'tasks:commit_edit' task.id commit.id %}">
+                                                            <i class="bi bi-pencil"></i> 编辑
+                                                        </a>
+                                                    </li>
+                                                    <li>
+                                                        <a class="dropdown-item text-danger" href="{% url 'tasks:commit_delete' task.id commit.id %}">
+                                                            <i class="bi bi-trash"></i> 删除
+                                                        </a>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <p class="mb-1 mt-2">{{ commit.commit_message }}</p>
-                                    <div class="mt-1">
-                                        <a href="{{ commit.commit_url }}" target="_blank" class="btn btn-sm btn-outline-secondary">
-                                            <i class="bi bi-link"></i> 查看提交
-                                        </a>
-                                        {% if commit.commit_merge_request_url %}
-                                            <a href="{{ commit.commit_merge_request_url }}" target="_blank" class="btn btn-sm btn-outline-info ms-1">
-                                                <i class="bi bi-git"></i> 合并请求
-                                            </a>
-                                        {% endif %}
+                                    <div class="card-body commit-content">
+                                        <div class="commit-message mb-3">
+                                            <p class="mb-0">{{ commit.commit_message|linebreaksbr }}</p>
+                                        </div>
+                                        
+                                        <div class="commit-meta d-flex justify-content-between align-items-center text-muted small">
+                                            <div>
+                                                <i class="bi bi-calendar me-1"></i>
+                                                提交于 {{ commit.commit_submit_time|date:"Y-m-d H:i" }}
+                                                {% if commit.commit_created_time %}
+                                                    | 记录于 {{ commit.commit_created_time|date:"Y-m-d H:i" }}
+                                                {% endif %}
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        {% empty %}
-                            <p class="text-muted">暂无提交记录</p>
-                        {% endfor %}
+                            {% endfor %}
+                        </div>
                     {% else %}
-                        <p class="text-muted">暂无提交记录</p>
+                        <div class="text-center py-4">
+                            <i class="bi bi-inbox display-4 text-muted"></i>
+                            <p class="text-muted mt-2">暂无提交记录</p>
+                            <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addCommitModal">
+                                <i class="bi bi-plus-circle"></i> 添加第一个提交记录
+                            </button>
+                        </div>
                     {% endif %}
                 </div>
+            </div>
             
             <div class="mb-4">
                 <div class="d-flex justify-content-between align-items-center mb-2">
@@ -159,45 +219,85 @@
 
 <!-- 添加提交记录模态框 -->
 <div class="modal fade" id="addCommitModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">添加提交记录</h5>
+                <h5 class="modal-title">
+                    <i class="bi bi-plus-circle me-2"></i>添加提交记录
+                </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <form method="post" action="{% url 'tasks:task_detail' task.id %}">
                 {% csrf_token %}
                 <div class="modal-body">
-                    <div class="mb-3">
-                        <label for="commit_git_hash" class="form-label">Commit ID *</label>
-                        <input type="text" class="form-control" id="commit_git_hash" name="commit_git_hash" required>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="commit_git_hash" class="form-label">
+                                    <i class="bi bi-hash me-1"></i>Commit ID *
+                                </label>
+                                <input type="text" class="form-control" id="commit_git_hash" 
+                                       name="commit_git_hash" required placeholder="例如: a1b2c3d4">
+                                <div class="form-text">请输入完整的Git提交哈希值</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="commit_submit_time" class="form-label">
+                                    <i class="bi bi-calendar me-1"></i>提交日期 *
+                                </label>
+                                <input type="datetime-local" class="form-control" id="commit_submit_time" 
+                                       name="commit_submit_time" required>
+                            </div>
+                        </div>
                     </div>
+                    
                     <div class="mb-3">
-                        <label for="commit_message" class="form-label">Commit Message *</label>
-                        <textarea class="form-control" id="commit_message" name="commit_message" rows="3" required></textarea>
+                        <label for="commit_message" class="form-label">
+                            <i class="bi bi-chat-text me-1"></i>Commit Message *
+                        </label>
+                        <textarea class="form-control" id="commit_message" name="commit_message" 
+                                  rows="3" required placeholder="请输入提交信息..."></textarea>
                     </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="commit_url" class="form-label">
+                                    <i class="bi bi-link-45deg me-1"></i>Commit URL *
+                                </label>
+                                <input type="url" class="form-control" id="commit_url" name="commit_url" 
+                                       required placeholder="https://git.example.com/commit/xxx">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="commit_merge_request_url" class="form-label">
+                                    <i class="bi bi-git me-1"></i>Merge Request URL
+                                </label>
+                                <input type="url" class="form-control" id="commit_merge_request_url" 
+                                       name="commit_merge_request_url" 
+                                       placeholder="https://git.example.com/merge/xxx">
+                            </div>
+                        </div>
+                    </div>
+                    
                     <div class="mb-3">
-                        <label for="commit_url" class="form-label">Commit URL *</label>
-                        <input type="url" class="form-control" id="commit_url" name="commit_url" required
-                               placeholder="例如: https://git.example.com/commit/xxx">
-                    </div>
-                    <div class="mb-3">
-                        <label for="commit_submit_time" class="form-label">提交日期 *</label>
-                        <input type="datetime-local" class="form-control" id="commit_submit_time" name="commit_submit_time" required>
-                    </div>
-                    <div class="mb-3 form-check">
-                        <input type="checkbox" class="form-check-input" id="commit_is_merged" name="commit_is_merged">
-                        <label class="form-check-label" for="commit_is_merged">是否已合并</label>
-                    </div>
-                    <div class="mb-3">
-                        <label for="commit_merge_request_url" class="form-label">Merge Request URL</label>
-                        <input type="url" class="form-control" id="commit_merge_request_url" name="commit_merge_request_url"
-                               placeholder="例如: https://git.example.com/merge/xxx">
+                        <div class="form-check form-switch">
+                            <input type="checkbox" class="form-check-input" id="commit_is_merged" name="commit_is_merged">
+                            <label class="form-check-label" for="commit_is_merged">
+                                <i class="bi bi-check-circle me-1"></i>是否已合并
+                            </label>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
-                    <button type="submit" name="add_commit" class="btn btn-primary">保存</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x-circle"></i> 取消
+                    </button>
+                    <button type="submit" name="add_commit" class="btn btn-primary">
+                        <i class="bi bi-check-circle"></i> 保存提交记录
+                    </button>
                 </div>
             </form>
         </div>
@@ -314,6 +414,62 @@
             const localDateTime = `${year}-${month}-${day}T${hours}:${minutes}`;
             commitSubmitTime.value = localDateTime;
         }
+
+        // 单个提交记录折叠/展开功能
+        const commitToggles = document.querySelectorAll('.commit-toggle');
+        commitToggles.forEach(toggle => {
+            toggle.addEventListener('click', function() {
+                const card = this.closest('.commit-card');
+                const content = card.querySelector('.commit-content');
+                const icon = this.querySelector('i');
+                
+                if (content.style.display === 'none') {
+                    content.style.display = 'block';
+                    icon.className = 'bi bi-chevron-down';
+                } else {
+                    content.style.display = 'none';
+                    icon.className = 'bi bi-chevron-right';
+                }
+            });
+        });
+
+        // 全部折叠/展开功能
+        const toggleAllBtn = document.getElementById('toggleAllCommits');
+        if (toggleAllBtn) {
+            let allExpanded = true;
+            
+            toggleAllBtn.addEventListener('click', function() {
+                const contents = document.querySelectorAll('.commit-content');
+                const icons = document.querySelectorAll('.commit-toggle i');
+                
+                if (allExpanded) {
+                    // 折叠所有
+                    contents.forEach(content => content.style.display = 'none');
+                    icons.forEach(icon => icon.className = 'bi bi-chevron-right');
+                    this.innerHTML = '<a title="全部折叠"><i class="bi bi-chevron-double-down"></i></a>';
+                    allExpanded = false;
+                } else {
+                    // 展开所有
+                    contents.forEach(content => content.style.display = 'block');
+                    icons.forEach(icon => icon.className = 'bi bi-chevron-down');
+                    this.innerHTML = '<a title="全部展开"><i class="bi bi-chevron-double-up"></i></a>';
+                    allExpanded = true;
+                }
+            });
+        }
+
+        // 为提交记录卡片添加悬停效果
+        const commitCards = document.querySelectorAll('.commit-card');
+        commitCards.forEach(card => {
+            card.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-2px)';
+                this.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+            });
+            card.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(0)';
+                this.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
+            });
+        });
 
         // 监听项目选择变化（用于关联任务模态框）
         const projectSelect = document.getElementById('id_project');

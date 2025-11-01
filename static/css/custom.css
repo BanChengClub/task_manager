@@ -165,6 +165,64 @@ body {
     border-left-color: var(--warning-color);
 }
 
+/* commit 样式*/
+.commit-card {
+    transition: all 0.3s ease;
+    border-left: 4px solid;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    margin-bottom: 1rem;
+    border-radius: 8px;
+}
+
+.commit-card:hover {
+    border-left-width: 6px;
+}
+
+.commit-card.border-success {
+    border-left-color: #198754;
+    background: linear-gradient(135deg, #f8fff8 0%, #f0f9f0 100%);
+}
+
+.commit-card.border-warning {
+    border-left-color: #ffc107;
+    background: linear-gradient(135deg, #fffdf0 0%, #fef9e7 100%);
+}
+
+.commit-message {
+    background: #f8f9fa;
+    padding: 12px;
+    border-radius: 6px;
+    border-left: 3px solid #6c757d;
+    font-family: 'SFMono-Regular', 'Consolas', 'Liberation Mono', 'Menlo', monospace;
+    font-size: 0.9rem;
+}
+
+.commit-meta {
+    font-size: 0.875rem;
+    border-top: 1px solid #e9ecef;
+    padding-top: 0.75rem;
+    margin-top: 0.75rem;
+}
+
+.commit-toggle {
+    transition: transform 0.2s ease;
+}
+
+.commit-toggle:hover {
+    transform: scale(1.1);
+}
+
+.commit-actions .btn {
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+}
+
+.commit-full-hash {
+    font-family: 'SFMono-Regular', 'Consolas', 'Liberation Mono', 'Menlo', monospace;
+    font-size: 0.8rem;
+    color: #6c757d;
+}
+
 .badge-project {
     background-color: #e8f0fe;
     color: var(--primary-color);

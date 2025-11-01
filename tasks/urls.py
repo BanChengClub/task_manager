@@ -18,6 +18,8 @@ urlpatterns = [
     path('task/<int:task_id>/', views.task_detail, name='task_detail'),
     path('task/<int:task_id>/edit/', views.task_edit, name='task_edit'),
     path('task/<int:task_id>/delete/', views.task_delete, name='task_delete'),
+    path('task/<int:task_id>/commit/<int:commit_id>/edit/', views.commit_edit, name='commit_edit'),
+    path('task/<int:task_id>/commit/<int:commit_id>/delete/', views.commit_delete, name='commit_delete'),
     path('calendar/', views.calendar_view, name='calendar'),
     path('tricks/', views.tricks_view, name='tricks'),
 ]

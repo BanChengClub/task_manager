@@ -1,0 +1,88 @@
+{% extends 'tasks/base.html' %}
+{% load static %}
+
+{% block title %}编辑提交记录 - 任务管理工具{% endblock %}
+
+{% block content %}
+<div class="view-content">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3>编辑提交记录</h3>
+        <div class="header-actions">
+            <a class="btn btn-outline-secondary" href="{% url 'tasks:task_detail' task.id %}">
+                <i class="bi bi-arrow-left"></i> 返回任务详情
+            </a>
+        </div>
+    </div>
+    
+    <div class="card">
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="{{ form.commit_git_hash.id_for_label }}" class="form-label">Commit ID *</label>
+                            {{ form.commit_git_hash }}
+                            {% if form.commit_git_hash.errors %}
+                                <div class="text-danger">{{ form.commit_git_hash.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="{{ form.commit_submit_time.id_for_label }}" class="form-label">提交日期 *</label>
+                            {{ form.commit_submit_time }}
+                            {% if form.commit_submit_time.errors %}
+                                <div class="text-danger">{{ form.commit_submit_time.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="{{ form.commit_message.id_for_label }}" class="form-label">Commit Message *</label>
+                    {{ form.commit_message }}
+                    {% if form.commit_message.errors %}
+                        <div class="text-danger">{{ form.commit_message.errors }}</div>
+                    {% endif %}
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="{{ form.commit_url.id_for_label }}" class="form-label">Commit URL *</label>
+                            {{ form.commit_url }}
+                            {% if form.commit_url.errors %}
+                                <div class="text-danger">{{ form.commit_url.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="{{ form.commit_merge_request_url.id_for_label }}" class="form-label">Merge Request URL</label>
+                            {{ form.commit_merge_request_url }}
+                            {% if form.commit_merge_request_url.errors %}
+                                <div class="text-danger">{{ form.commit_merge_request_url.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mb-3 form-check form-switch">
+                    {{ form.commit_is_merged }}
+                    <label class="form-check-label" for="{{ form.commit_is_merged.id_for_label }}">是否已合并</label>
+                    {% if form.commit_is_merged.errors %}
+                        <div class="text-danger">{{ form.commit_is_merged.errors }}</div>
+                    {% endif %}
+                </div>
+                
+                <div class="d-flex justify-content-between">
+                    <a href="{% url 'tasks:task_detail' task.id %}" class="btn btn-secondary">取消</a>
+                    <button type="submit" class="btn btn-primary">保存更改</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

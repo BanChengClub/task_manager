@@ -13,6 +13,12 @@
                 <i class="bi bi-info-circle-fill text-primary fs-4 me-3"></i>
             {% endif %}
             <div class="flex-grow-1">
+                <strong class="me-2">
+                    {% if message.tags == 'success' %}成功
+                    {% elif message.tags == 'error' %}错误
+                    {% elif message.tags == 'warning' %}警告
+                    {% else %}信息{% endif %}:
+                </strong>
                 {{ message }}
             </div>
             <button type="button" class="btn-close ms-3" data-bs-dismiss="toast" aria-label="Close"></button>
@@ -40,7 +46,7 @@ document.addEventListener('DOMContentLoaded', function() {
         setTimeout(() => {
             toast.classList.add('fade-out');
             setTimeout(() => toast.remove(), 500);
-        }, 3000);
+        }, 5000);
     });
 });
 </script>
