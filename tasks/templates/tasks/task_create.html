@@ -170,12 +170,19 @@
 
 {% block extra_js %}
 <script>
+// 定义初始值
+const initialProjectId = '{{ form.task_belongsto_project_id.value }}';
+const initialModelId = '{{ form.task_belongsto_model_id.value }}';
+
 // 动态加载机型选项
-function loadModels(projectId) {
+function loadModels(projectId, preserveCurrentSelection = false) {
     console.log('Loading models for project:', projectId);
     const modelSelect = document.getElementById('id_task_belongsto_model_id');
 
     if (projectId) {
+        // 保存当前选中的值（如果是编辑模式）
+        const currentValue = modelSelect.value;
+
         // 清空现有选项
         modelSelect.innerHTML = '';
 
@@ -213,6 +220,15 @@ function loadModels(projectId) {
                         option.textContent = model.name;
                         modelSelect.appendChild(option);
                     });
+
+                    // 如果是编辑模式，恢复之前选中的值
+                    if (preserveCurrentSelection && currentValue) {
+                        modelSelect.value = currentValue;
+                    }
+                    // 或者使用初始值
+                    else if (initialModelId && projectId === initialProjectId) {
+                        modelSelect.value = initialModelId;
+                    }
                 } else {
                     const noModelsOption = document.createElement('option');
                     noModelsOption.value = '';
@@ -247,18 +263,26 @@ document.addEventListener('DOMContentLoaded', function() {
 
     console.log('Page loaded, project select:', projectSelect);
     console.log('Page loaded, model select:', modelSelect);
+    console.log('Initial project ID:', initialProjectId);
+    console.log('Initial model ID:', initialModelId);
 
     // 如果项目已选择，加载对应的机型
     if (projectSelect && projectSelect.value) {
         console.log('Initial project selected:', projectSelect.value);
-        loadModels(projectSelect.value);
+        loadModels(projectSelect.value, true);
+    }
+    // 如果没有项目选择但有初始项目ID（编辑模式）
+    else if (initialProjectId) {
+        console.log('Using initial project ID:', initialProjectId);
+        projectSelect.value = initialProjectId;
+        loadModels(initialProjectId, true);
     }
 
     // 监听项目选择变化
     if (projectSelect) {
         projectSelect.addEventListener('change', function() {
             console.log('Project changed:', this.value);
-            loadModels(this.value);
+            loadModels(this.value, false);
         });
     }
 
@@ -290,16 +314,16 @@ document.addEventListener('DOMContentLoaded', function() {
         taskTypeSelect.addEventListener('change', toggleSourceTaskField);
     }
 
-    // 设置默认日期为明天
+    // 设置默认日期为明天（仅限创建新任务）
     const dueDateInput = document.getElementById('{{ form.task_deadline.id_for_label }}');
-    if (dueDateInput && !dueDateInput.value) {
+    if (dueDateInput && !dueDateInput.value && !initialProjectId) {
         const tomorrow = new Date();
         tomorrow.setDate(tomorrow.getDate() + 1);
 
         // 处理时区偏移
         const offset = tomorrow.getTimezoneOffset() * 60000;
         const localTomorrow = new Date(tomorrow.getTime() - offset);
-        dueDateInput.value = localTomorrow.toISOString().split('T')[0];
+        dueDateInput.value = localTomorrow.toISOString().split('T')[0] + 'T00:00';
     }
 });
 

@@ -250,7 +250,11 @@ def model_delete(request, model_id):
 
 @login_required
 def task_list(request):
-    tasks = Task.objects.filter(task_assigned_to_user_id=request.user).order_by('-task_created_time')
+    
+    if request.user.is_superuser:
+        tasks = Task.objects.all().order_by('-task_created_time')
+    else:
+        tasks = Task.objects.filter(task_assigned_to_user_id=request.user).order_by('-task_created_time')
     # 处理并合并所有筛选条件
     status_filter = request.GET.get('task_status')
     project_filter = request.GET.get('project_id')
