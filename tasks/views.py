@@ -49,37 +49,68 @@ def register(request):
 @login_required
 def home(request):
     # 获取统计信息
-    total_tasks = Task.objects.filter(task_assigned_to_user_id=request.user).count()
-    pending_tasks = Task.objects.filter(task_assigned_to_user_id=request.user, task_status='pending').count()
-    in_progress_tasks = Task.objects.filter(task_assigned_to_user_id=request.user, task_status='in-progress').count()
-    completed_tasks = Task.objects.filter(task_assigned_to_user_id=request.user, task_status='completed').count()
-    on_hold_tasks = Task.objects.filter(task_assigned_to_user_id=request.user, task_status='on-hold').count()
-    cancelled_tasks = Task.objects.filter(task_assigned_to_user_id=request.user, task_status='cancelled').count()
+    if request.user.is_superuser:
+        total_tasks = Task.objects.all().count()
+        pending_tasks = Task.objects.filter(task_status='pending').count()
+        in_progress_tasks = Task.objects.filter(task_status='in-progress').count()
+        completed_tasks = Task.objects.filter(task_status='completed').count()
+        on_hold_tasks = Task.objects.filter(task_status='on-hold').count()
+        cancelled_tasks = Task.objects.filter(task_status='cancelled').count()
+    else:
+        total_tasks = Task.objects.filter(task_assigned_to_user_id=request.user).count()
+        pending_tasks = Task.objects.filter(task_assigned_to_user_id=request.user, task_status='pending').count()
+        in_progress_tasks = Task.objects.filter(task_assigned_to_user_id=request.user, task_status='in-progress').count()
+        completed_tasks = Task.objects.filter(task_assigned_to_user_id=request.user, task_status='completed').count()
+        on_hold_tasks = Task.objects.filter(task_assigned_to_user_id=request.user, task_status='on-hold').count()
+        cancelled_tasks = Task.objects.filter(task_assigned_to_user_id=request.user, task_status='cancelled').count()
 
     # 获取今天到期的任务
     today = timezone.now().date()
-    today_tasks = Task.objects.filter(
-        task_assigned_to_user_id=request.user,
-        task_deadline=today,
-        task_status__in=['pending', 'in-progress', 'on-hold']
-    )
+    if request.user.is_superuser:
+        today_tasks = Task.objects.filter(
+            task_deadline=today,
+            task_status__in=['pending', 'in-progress', 'on-hold']
+        )
+    else:
+        today_tasks = Task.objects.filter(
+            task_assigned_to_user_id=request.user,
+            task_deadline=today,
+            task_status__in=['pending', 'in-progress', 'on-hold']
+        )
 
     # 获取最近任务
-    recent_tasks = Task.objects.filter(task_assigned_to_user_id=request.user).order_by('-task_created_time')[:10]
+    if request.user.is_superuser:
+        recent_tasks = Task.objects.all().order_by('-task_created_time')[:10]
+    else:
+        recent_tasks = Task.objects.filter(task_assigned_to_user_id=request.user).order_by('-task_created_time')[:10]
 
     # 获取即将到期的任务
-    due_soon_tasks = Task.objects.filter(
-        task_assigned_to_user_id=request.user,
-        task_deadline__gte=today,
-        task_deadline__lte=today + timedelta(days=7),
-        task_status__in=['pending', 'in-progress', 'on-hold']
-    )
+    if request.user.is_superuser:
+        due_soon_tasks = Task.objects.filter(
+            task_deadline__gte=today,
+            task_deadline__lte=today + timedelta(days=7),
+            task_status__in=['pending', 'in-progress', 'on-hold']
+        )
+    else:    
+        due_soon_tasks = Task.objects.filter(
+            task_assigned_to_user_id=request.user,
+            task_deadline__gte=today,
+            task_deadline__lte=today + timedelta(days=7),
+            task_status__in=['pending', 'in-progress', 'on-hold']
+        )
 
     # 获取项目统计
-    projects = Project.objects.annotate(
-        task_count=Count('tasks', filter=Q(tasks__task_assigned_to_user_id=request.user)),
-        completed_count=Count('tasks', filter=Q(tasks__task_assigned_to_user_id=request.user, tasks__task_status='completed'))
-    )
+    if request.user.is_superuser:
+        projects = Project.objects.annotate(
+            task_count=Count('tasks'),
+            completed_count=Count('tasks', filter=Q(tasks__task_status='completed'))
+        )
+    else:
+        projects = Project.objects.annotate(
+            task_count=Count('tasks', filter=Q(tasks__task_assigned_to_user_id=request.user)),
+            completed_count=Count('tasks', filter=Q(tasks__task_assigned_to_user_id=request.user, tasks__task_status='completed'))
+        )
+
 
     # 获取所有项目用于侧边栏
     all_projects = Project.objects.all()[:6]  # 只取前6个项目显示在侧边栏
