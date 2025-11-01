@@ -105,6 +105,15 @@ class Task(models.Model):
         if self.task_deadline and self.task_status != 'completed':
             return timezone.now() > self.task_deadline
         return False
+
+    def get_formatted_deadline(self):
+        """返回格式化后的截止日期，用于表单显示"""
+        if self.task_deadline:
+            from django.utils import timezone
+            local_deadline = timezone.localtime(self.task_deadline)
+            return local_deadline.strftime('%Y-%m-%dT%H:%M')
+        return None
+
     
 class TaskCommitRecord(models.Model):
     commit_git_hash = models.CharField(max_length=64, verbose_name="Git提交哈希")

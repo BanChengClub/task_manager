@@ -46,11 +46,14 @@ class TaskForm(forms.ModelForm):
             'task_belongsto_project_id': forms.Select(attrs={'class': 'form-control'}),
             'task_belongsto_model_id': forms.Select(attrs={'class': 'form-control'}),
             'task_source_task_id': forms.Select(attrs={'class': 'form-control'}),
-            'task_deadline': forms.DateTimeInput(attrs={'type': 'datetime-local', 'class': 'form-control'}),
+            'task_deadline': forms.DateTimeInput(attrs={'type': 'datetime-local', 'class': 'form-control'}, format='%Y-%m-%dT%H:%M'),
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        # 设置日期时间输入格式
+        self.fields['task_deadline'].input_formats = ['%Y-%m-%dT%H:%M', '%Y-%m-%d %H:%M', '%Y/%m/%d %H:%M']
+
         self.fields['task_assigned_to_user_id'].queryset = self.fields['task_assigned_to_user_id'].queryset.order_by('username')
         self.fields['task_source_task_id'].queryset = self.fields['task_source_task_id'].queryset.order_by('-task_created_time')
 
@@ -59,6 +62,13 @@ class TaskForm(forms.ModelForm):
             self.fields['task_belongsto_model_id'].queryset = ProjectModel.objects.filter(model_belongsto_project_id=self.instance.task_belongsto_project_id)
             # 设定机型的初始值为当前实例的机型
             self.fields['task_belongsto_model_id'].initial = self.instance.task_belongsto_model_id
+
+            # 对于编辑模式，格式化日期时间为正确的格式
+            if self.instance.task_deadline:
+                # 转换为浏览器兼容的格式
+                from django.utils import timezone
+                local_deadline = timezone.localtime(self.instance.task_deadline)
+                self.initial['task_deadline'] = local_deadline.strftime('%Y-%m-%dT%H:%M')
         else:
             # 对于新任务，检查是否有项目数据传入
             if 'task_belongsto_project_id' in self.data:

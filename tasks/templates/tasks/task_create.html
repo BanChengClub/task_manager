@@ -173,6 +173,7 @@
 // 定义初始值
 const initialProjectId = '{{ form.task_belongsto_project_id.value }}';
 const initialModelId = '{{ form.task_belongsto_model_id.value }}';
+const initialDeadline = '{{ form.task_deadline.value }}';
 
 // 动态加载机型选项
 function loadModels(projectId, preserveCurrentSelection = false) {
@@ -260,11 +261,13 @@ function loadModels(projectId, preserveCurrentSelection = false) {
 document.addEventListener('DOMContentLoaded', function() {
     const projectSelect = document.getElementById('id_task_belongsto_project_id');
     const modelSelect = document.getElementById('id_task_belongsto_model_id');
+    const dueDateInput = document.getElementById('id_task_deadline');
 
     console.log('Page loaded, project select:', projectSelect);
     console.log('Page loaded, model select:', modelSelect);
     console.log('Initial project ID:', initialProjectId);
     console.log('Initial model ID:', initialModelId);
+    console.log('Initial deadline:', initialDeadline);
 
     // 如果项目已选择，加载对应的机型
     if (projectSelect && projectSelect.value) {
@@ -284,6 +287,43 @@ document.addEventListener('DOMContentLoaded', function() {
             console.log('Project changed:', this.value);
             loadModels(this.value, false);
         });
+    }
+
+    // 处理日期时间字段
+    if (dueDateInput) {
+        // 如果是编辑模式且有初始日期值，确保格式正确
+        if (initialDeadline && initialDeadline !== 'None') {
+            // 确保日期时间格式正确（YYYY-MM-DDTHH:MM）
+            let formattedDeadline = initialDeadline;
+            
+            // 如果格式不正确，尝试转换
+            if (formattedDeadline.includes('/')) {
+                // 将 "2025/11/22 17:04" 转换为 "2025-11-22T17:04"
+                formattedDeadline = formattedDeadline.replace(/\//g, '-').replace(' ', 'T');
+            } else if (formattedDeadline.includes('-') && !formattedDeadline.includes('T')) {
+                // 将 "2025-11-22 17:04" 转换为 "2025-11-22T17:04"
+                formattedDeadline = formattedDeadline.replace(' ', 'T');
+            }
+            
+            console.log('Setting deadline to:', formattedDeadline);
+            dueDateInput.value = formattedDeadline;
+        }
+        // 如果是创建新任务，设置默认日期为明天
+        else if (!initialProjectId) {
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            
+            // 格式化为 YYYY-MM-DDTHH:MM
+            const year = tomorrow.getFullYear();
+            const month = String(tomorrow.getMonth() + 1).padStart(2, '0');
+            const day = String(tomorrow.getDate()).padStart(2, '0');
+            const hours = '09'; // 默认上午9点
+            const minutes = '00';
+            
+            const defaultDeadline = `${year}-${month}-${day}T${hours}:${minutes}`;
+            console.log('Setting default deadline:', defaultDeadline);
+            dueDateInput.value = defaultDeadline;
+        }
     }
 
     // 根据任务类型显示/隐藏源任务字段
@@ -314,17 +354,6 @@ document.addEventListener('DOMContentLoaded', function() {
         taskTypeSelect.addEventListener('change', toggleSourceTaskField);
     }
 
-    // 设置默认日期为明天（仅限创建新任务）
-    const dueDateInput = document.getElementById('{{ form.task_deadline.id_for_label }}');
-    if (dueDateInput && !dueDateInput.value && !initialProjectId) {
-        const tomorrow = new Date();
-        tomorrow.setDate(tomorrow.getDate() + 1);
-
-        // 处理时区偏移
-        const offset = tomorrow.getTimezoneOffset() * 60000;
-        const localTomorrow = new Date(tomorrow.getTime() - offset);
-        dueDateInput.value = localTomorrow.toISOString().split('T')[0] + 'T00:00';
-    }
 });
 
 </script>
