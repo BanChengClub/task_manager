@@ -404,7 +404,6 @@ def task_detail(request, task_id):
             else:
                 messages.error(request, '评论内容不能为空。')
         elif 'add_commit' in request.POST:
-            print("Received POST data for commit:", request.POST)  # Debugging line
             commit_form = CommitForm(request.POST)
             if commit_form.is_valid():
                 commit = commit_form.save(commit=False)                
@@ -414,7 +413,10 @@ def task_detail(request, task_id):
                 messages.success(request, '提交记录添加成功')
                 return redirect('tasks:task_detail', task_id=task.id)
             else:
-                messages.error(request, '提交记录信息有误，请检查表单。')
+                # 显示表单错误详情
+                for field, errors in commit_form.errors.items():
+                    for error in errors:
+                        messages.error(request, f"提交记录错误 - {field}: {error}")
         elif 'update_status' in request.POST:
             new_status = request.POST.get('task_status')
             if new_status in dict(Task.STATUS_CHOICES).keys():
@@ -427,6 +429,18 @@ def task_detail(request, task_id):
         elif 'create_related_task' in request.POST:
             # 处理 创建关联任务的请求
             form_data = request.POST.copy()
+            # 重命名字段以匹配TaskForm
+            form_data['task_title'] = form_data.get('title', '')
+            form_data['task_description'] = form_data.get('description', '')
+            form_data['task_priority'] = form_data.get('priority', '')
+            form_data['task_assigned_to_user_id'] = form_data.get('assigned_to', '')
+            form_data['task_belongsto_project_id'] = form_data.get('project', '')
+            form_data['task_belongsto_model_id'] = form_data.get('model', '')
+            form_data['task_deadline'] = form_data.get('deadline', '')
+            form_data['task_source_task_id'] = form_data.get('task_source_task_id', '')
+            form_data['task_type'] = 'feedback'
+            form_data['task_status'] = 'pending'
+
             task_form = TaskForm(form_data)
             if task_form.is_valid():
                 related_task = task_form.save(commit=False)

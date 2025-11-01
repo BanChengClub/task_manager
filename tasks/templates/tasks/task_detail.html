@@ -75,21 +75,42 @@
                     </button>
                 </div>
                 <div id="commit-records">
-                    {% if task.commits.all %}
-                        {% for commit in task.commits.all %}
-                            <div class="commit-record">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <strong>{{ commit.commit_id }}</strong>
-                                    <small class="text-muted">{{ commit.commit_date }}</small>
+                    {% if commit_form %}
+                        {% for commit in commit_form %}
+                            <div class="card mb-2">
+                                <div class="card-body py-2">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <span >SHA:</span>
+                                            <strong class="text-monospace">{{ commit.commit_git_hash }}</strong>
+                                            {% if commit.commit_is_merged %}
+                                                <span class="badge bg-success ms-2">已合并</span>
+                                            {% else %}
+                                                <span class="badge bg-warning ms-2">未合并</span>
+                                            {% endif %}
+                                        </div>
+                                        <small class="text-muted">{{ commit.commit_submit_time|date:"Y-m-d H:i" }}</small>
+                                    </div>
+                                    <p class="mb-1 mt-2">{{ commit.commit_message }}</p>
+                                    <div class="mt-1">
+                                        <a href="{{ commit.commit_url }}" target="_blank" class="btn btn-sm btn-outline-secondary">
+                                            <i class="bi bi-link"></i> 查看提交
+                                        </a>
+                                        {% if commit.commit_merge_request_url %}
+                                            <a href="{{ commit.commit_merge_request_url }}" target="_blank" class="btn btn-sm btn-outline-info ms-1">
+                                                <i class="bi bi-git"></i> 合并请求
+                                            </a>
+                                        {% endif %}
+                                    </div>
                                 </div>
-                                <p class="mb-0 mt-1">{{ commit.message }}</p>
                             </div>
+                        {% empty %}
+                            <p class="text-muted">暂无提交记录</p>
                         {% endfor %}
                     {% else %}
                         <p class="text-muted">暂无提交记录</p>
                     {% endif %}
                 </div>
-            </div>
             
             <div class="mb-4">
                 <div class="d-flex justify-content-between align-items-center mb-2">
@@ -148,16 +169,30 @@
                 {% csrf_token %}
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label for="commitId" class="form-label">Commit ID *</label>
-                        <input type="text" class="form-control" id="commitId" name="commit_id" required>
+                        <label for="commit_git_hash" class="form-label">Commit ID *</label>
+                        <input type="text" class="form-control" id="commit_git_hash" name="commit_git_hash" required>
                     </div>
                     <div class="mb-3">
-                        <label for="commitMessage" class="form-label">Commit Message *</label>
-                        <textarea class="form-control" id="commitMessage" name="message" rows="3" required></textarea>
+                        <label for="commit_message" class="form-label">Commit Message *</label>
+                        <textarea class="form-control" id="commit_message" name="commit_message" rows="3" required></textarea>
                     </div>
                     <div class="mb-3">
-                        <label for="commitDate" class="form-label">提交日期 *</label>
-                        <input type="date" class="form-control" id="commitDate" name="commit_date" required>
+                        <label for="commit_url" class="form-label">Commit URL *</label>
+                        <input type="url" class="form-control" id="commit_url" name="commit_url" required
+                               placeholder="例如: https://git.example.com/commit/xxx">
+                    </div>
+                    <div class="mb-3">
+                        <label for="commit_submit_time" class="form-label">提交日期 *</label>
+                        <input type="datetime-local" class="form-control" id="commit_submit_time" name="commit_submit_time" required>
+                    </div>
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="commit_is_merged" name="commit_is_merged">
+                        <label class="form-check-label" for="commit_is_merged">是否已合并</label>
+                    </div>
+                    <div class="mb-3">
+                        <label for="commit_merge_request_url" class="form-label">Merge Request URL</label>
+                        <input type="url" class="form-control" id="commit_merge_request_url" name="commit_merge_request_url"
+                               placeholder="例如: https://git.example.com/merge/xxx">
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -224,12 +259,8 @@
                     <div class="row">
                         <div class="col-md-6">
                             <div class="mb-3">
-                                <label for="id_task_type" class="form-label">任务类型 *</label>
-                                <select class="form-select" id="id_task_type" name="task_type" required>
-                                    {% for value, display in task_types %}
-                                        <option value="{{ value }}">{{ display }}</option>
-                                    {% endfor %}
-                                </select>
+                                <label for="id_deadline" class="form-label">截止日期 *</label>
+                                <input type="datetime-local" class="form-control" id="id_deadline" name="deadline" required>
                             </div>
                         </div>
                         <div class="col-md-6">
@@ -269,16 +300,22 @@
 {% block extra_js %}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // 设置提交日期为今天
-        const commitDate = document.getElementById('commitDate');
-        if (commitDate) {
-            const today = new Date().toISOString().split('T')[0];
-            commitDate.value = today;
+        // 设置提交日期时间为当前时间
+        const commitSubmitTime = document.getElementById('commit_submit_time');
+        if (commitSubmitTime) {
+            const now = new Date();
+            // 转换为本地datetime字符串 (YYYY-MM-DDTHH:MM)
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            
+            const localDateTime = `${year}-${month}-${day}T${hours}:${minutes}`;
+            commitSubmitTime.value = localDateTime;
         }
-    });
 
-    document.addEventListener('DOMContentLoaded', function() {
-        // 监听项目选择变化
+        // 监听项目选择变化（用于关联任务模态框）
         const projectSelect = document.getElementById('id_project');
         const modelSelect = document.getElementById('id_model');
 
