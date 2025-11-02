@@ -1,0 +1,70 @@
+<div class="related-tasks-section">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h6 class="mb-0">
+            <i class="bi bi-diagram-3 me-2"></i>关联任务
+            <span class="badge bg-secondary ms-2" id="relatedTasksCount">
+                {% if source_task %}{{ related_tasks.count|add:1 }}{% else %}{{ related_tasks.count }}{% endif %}
+                {% if sibling_tasks %}+{{ sibling_tasks.count }}{% endif %}
+            </span>
+        </h6>
+        <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#createRelatedTaskModal">
+            <i class="bi bi-plus-circle"></i> 创建关联任务
+        </button>
+    </div>
+
+    <div class="related-tasks-container">
+        <!-- 源任务（父任务） -->
+        {% if source_task %}
+        <div class="task-relationship mb-3">
+            <div class="relationship-label text-muted small mb-2">
+                <i class="bi bi-arrow-up"></i> 源任务
+            </div>
+            <div class="source-task-card">
+                {% include 'tasks/partials/related_task_item.html' with task=source_task relationship='source' %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- 子任务（由此任务创建的关联任务） -->
+        {% if related_tasks %}
+        <div class="task-relationship mb-3">
+            <div class="relationship-label text-muted small mb-2">
+                <i class="bi bi-arrow-down"></i> 子任务
+                <span class="badge bg-info ms-1">{{ related_tasks.count }}</span>
+            </div>
+            <div class="related-tasks-list">
+                {% for related_task in related_tasks %}
+                    {% include 'tasks/partials/related_task_item.html' with task=related_task relationship='child' %}
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- 兄弟任务（同源的其他任务） -->
+        {% if sibling_tasks %}
+        <div class="task-relationship mb-3">
+            <div class="relationship-label text-muted small mb-2">
+                <i class="bi bi-arrow-left-right"></i> 相关任务（同源任务）
+                <span class="badge bg-warning text-dark ms-1">{{ sibling_tasks.count }}</span>
+            </div>
+            <div class="sibling-tasks-list">
+                {% for sibling_task in sibling_tasks %}
+                    {% include 'tasks/partials/related_task_item.html' with task=sibling_task relationship='sibling' %}
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- 空状态 -->
+        {% if not source_task and not related_tasks and not sibling_tasks %}
+        <div class="empty-related-tasks text-center py-4">
+            <i class="bi bi-diagram-3 display-4 text-muted"></i>
+            <p class="text-muted mt-2 mb-1">暂无关联任务</p>
+            <p class="text-muted small">创建关联任务来跟踪相关的横展反馈</p>
+            {% comment %} <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#createRelatedTaskModal">
+                <i class="bi bi-plus-circle"></i> 创建第一个关联任务
+            </button> {% endcomment %}
+        </div>
+        {% endif %}
+    </div>
+</div>

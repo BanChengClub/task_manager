@@ -8,9 +8,6 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h3>任务详情</h3>
         <div class="header-actions">
-            <a class="btn btn-outline-primary" href="{% url 'tasks:task_edit' task.id %}">
-                <i class="bi bi-pencil"></i> 编辑
-            </a>
             <a class="btn btn-outline-secondary" href="{% url 'tasks:task_list' %}">
                 <i class="bi bi-arrow-left"></i> 返回列表
             </a>
@@ -162,26 +159,15 @@
                         </div>
                     {% else %}
                         <div class="text-center py-4">
-                            <i class="bi bi-inbox display-4 text-muted"></i>
+                            <i class="bi bi-git display-4 text-muted"></i>
                             <p class="text-muted mt-2">暂无提交记录</p>
-                            <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addCommitModal">
-                                <i class="bi bi-plus-circle"></i> 添加第一个提交记录
-                            </button>
                         </div>
                     {% endif %}
                 </div>
             </div>
             
             <div class="mb-4">
-                <div class="d-flex justify-content-between align-items-center mb-2">
-                    <h6>关联任务</h6>
-                    <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#createRelatedTaskModal">
-                        <i class="bi bi-link"></i> 创建关联任务
-                    </button>
-                </div>
-                <div id="related-tasks">
-                    <p class="text-muted">暂无关联任务</p>
-                </div>
+                {% include 'tasks/partials/related_tasks.html' %}
             </div>
             
             <div class="comment-section">
@@ -470,6 +456,51 @@
                 this.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
             });
         });
+
+        // 关联任务悬停效果
+        const relatedTaskItems = document.querySelectorAll('.related-task-item');
+        relatedTaskItems.forEach(item => {
+            item.addEventListener('mouseenter', function() {
+                this.style.boxShadow = '0 2px 8px rgba(0,0,0,0.15)';
+            });
+            item.addEventListener('mouseleave', function() {
+                this.style.boxShadow = 'none';
+            });
+        });
+
+        // 快速状态指示器点击事件
+        const statusIndicators = document.querySelectorAll('.task-status-indicator');
+        statusIndicators.forEach(indicator => {
+            indicator.addEventListener('click', function() {
+                const taskItem = this.closest('.related-task-item');
+                const taskId = taskItem.dataset.taskId;
+                // 这里可以添加快速状态更新的功能
+                console.log('快速更新任务状态:', taskId);
+                // 示例：打开快速状态编辑模态框
+                // openQuickStatusModal(taskId);
+            });
+        });
+
+        // 关联任务计数更新
+        function updateRelatedTasksCount() {
+            const sourceCount = document.querySelectorAll('[data-relationship="source"]').length;
+            const childCount = document.querySelectorAll('[data-relationship="child"]').length;
+            const siblingCount = document.querySelectorAll('[data-relationship="sibling"]').length;
+            
+            const totalCount = sourceCount + childCount + siblingCount;
+            const countElement = document.getElementById('relatedTasksCount');
+            
+            if (countElement) {
+                let countText = totalCount.toString();
+                if (siblingCount > 0) {
+                    countText = `${sourceCount + childCount}+${siblingCount}`;
+                }
+                countElement.textContent = countText;
+            }
+        }
+
+        // 初始化计数
+        updateRelatedTasksCount();
 
         // 监听项目选择变化（用于关联任务模态框）
         const projectSelect = document.getElementById('id_project');

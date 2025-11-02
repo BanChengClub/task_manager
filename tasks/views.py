@@ -389,6 +389,18 @@ def task_detail(request, task_id):
     commit_records = TaskCommitRecord.objects.filter(commit_belongsto_task_id=task).order_by('-commit_created_time')
     comment_records = TaskCommentRecord.objects.filter(comment_belongsto_task_id=task).order_by('comment_created_time')
 
+    # 获取关联任务
+    source_task = task.task_source_task_id  # 源任务（父任务）
+    related_tasks = Task.objects.filter(task_source_task_id=task)  # 子任务（当前任务创建的关联任务）
+    
+    # 获取所有相关的横展反馈任务（包括兄弟任务）
+    sibling_tasks = Task.objects.none()
+    if source_task:
+        # 如果有源任务，获取所有同源的任务（兄弟任务）
+        sibling_tasks = Task.objects.filter(
+            task_source_task_id=source_task
+        ).exclude(id=task.id)
+
     if request.method == 'POST':
         if 'add_comment' in request.POST:
             content_form = CommentForm(request.POST)
@@ -478,6 +490,10 @@ def task_detail(request, task_id):
         'task_types': task_types,
         'priorities': task_priorities,
         'statuses': task_statuses,
+        # 添加关联任务数据
+        'source_task': source_task,
+        'related_tasks': related_tasks,
+        'sibling_tasks': sibling_tasks,
     }
 
     return render(request, 'tasks/task_detail.html', context)
